@@ -1,11 +1,42 @@
-import { motion } from "framer-motion";
+import { motion, useAnimation } from "framer-motion";
+import { useState } from "react";
 
 interface InvitationCardProps {
   opened: boolean;
   onOpen: () => void;
 }
 
+const FRAG_COUNT = 10;
+
 function InvitationCard({ opened, onOpen }: InvitationCardProps) {
+  const flapControls = useAnimation();
+  const fragControls = useAnimation();
+  const innerControls = useAnimation();
+  const [animating, setAnimating] = useState(false);
+
+  async function handleOpen() {
+    if (opened || animating) return;
+    setAnimating(true);
+
+    // 1) explode seal fragments quickly
+    fragControls.start((i) => ({
+      opacity: [1, 1, 0],
+      x: [0, (Math.random() - 0.5) * 160],
+      y: [0, (Math.random() - 0.4) * -140],
+      rotate: [(Math.random() - 0.5) * 80],
+      scale: [1, 0.9, 0.6],
+      transition: { duration: 0.6 + Math.random() * 0.25 },
+    }));
+n    // small delay as fragments fly
+    await new Promise((r) => setTimeout(r, 420));
+n    // 2) open the flap (rotate up)
+    await flapControls.start({ rotateX: -140, transition: { duration: 0.75, ease: [0.22, 1, 0.36, 1] } });
+n    // 3) lift the inner card a bit to reveal
+    await innerControls.start({ y: -84, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } });
+n    // done — notify parent to show the full invitation content
+    onOpen();
+  }
+
   return (
     <motion.div
       className="card-wrapper"
@@ -17,79 +48,51 @@ function InvitationCard({ opened, onOpen }: InvitationCardProps) {
       <motion.button
         className="invitation-card"
         type="button"
-        onClick={onOpen}
+        onClick={handleOpen}
         disabled={opened}
         aria-label="Open wedding invitation"
         whileTap={{ scale: 0.98 }}
       >
-        <div className="card-border outer" />
-        <div className="card-border inner" />
+        <div className="envelope">
+          <motion.div className="flap" animate={flapControls as any} initial={{ rotateX: 0 }} />
 
-        <div className="corner corner-tl">❧</div>
-        <div className="corner corner-tr">❧</div>
-        <div className="corner corner-bl">❧</div>
-        <div className="corner corner-br">❧</div>
+          <motion.div className="card-seal" aria-hidden>
+            <div className="seal" role="img" aria-label="wax seal">
+              <span style={{ color: "#e6c99d", fontSize: "1.25rem" }}>✦</span>
 
-        <div className="card-content">
-          <motion.div
-            className="card-symbol"
-            animate={{ opacity: [0.65, 1, 0.65], scale: [1, 1.03, 1] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          >
-            ✦
+              {/* fragments positioned around the seal */}
+              {Array.from({ length: FRAG_COUNT }).map((_, i) => (
+                <motion.span
+                  custom={i}
+                  key={i}
+                  className="seal-frag"
+                  initial={{ opacity: 0 }}
+                  animate={fragControls}
+                />
+              ))}
+            </div>
           </motion.div>
-
-          <p className="card-kicker">A WEDDING INVITATION</p>
-
-          <h2 className="card-names">
-            M <span>&amp;</span> P
-          </h2>
-
-          <div className="card-divider"><span>✧</span></div>
-
-          <p className="card-message">
-            A new chapter
-            <br />
-            begins
-          </p>
-
-          <div className="card-seal">
-            <motion.div
-              className="seal"
-              whileHover={{ scale: 1.08, rotate: -4 }}
-              animate={{
-                boxShadow: [
-                  "0 0 0 rgba(200,168,91,0)",
-                  "0 0 22px rgba(200,168,91,0.25)",
-                  "0 0 0 rgba(200,168,91,0)"
-                ]
-              }}
-              transition={{ boxShadow: { duration: 3, repeat: Infinity } }}
-            >
-              <span>✦</span>
-            </motion.div>
-          </div>
-
-          <motion.p
-            className="open-label"
-            animate={{ opacity: [0.55, 1, 0.55] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-          >
-            OPEN INVITATION
-          </motion.p>
+n          <motion.div className="inner-card" animate={innerControls as any} initial={{ y: 0 }}>
+            <div className="card-content">
+              <div className="card-symbol">✦</div>
+              <p className="card-kicker">A WEDDING INVITATION</p>
+n              <h2 className="card-names">M <span>&amp;</span> P</h2>
+n              <div className="card-divider"><span>✧</span></div>
+n              <p className="card-message">
+                A new chapter
+                <br />
+                begins
+              </p>
+n              <motion.p
+                className="open-label"
+                animate={{ opacity: [0.55, 1, 0.55] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+              >
+                OPEN INVITATION
+              </motion.p>
+            </div>
+          </motion.div>
         </div>
-
-        <motion.div
-          className="card-shine"
-          initial={{ x: "-120%" }}
-          animate={{ x: "120%" }}
-          transition={{
-            duration: 2,
-            delay: 1.8,
-            repeat: Infinity,
-            repeatDelay: 7
-          }}
-        />
       </motion.button>
     </motion.div>
   );

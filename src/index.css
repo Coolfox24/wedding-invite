@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=IM+Fell+English:ital@0;1&display=swap");
+﻿@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=IM+Fell+English:ital@0;1&display=swap");
 
 :root {
   font-family: "IM Fell English", Georgia, serif;
@@ -117,22 +117,116 @@ button { font: inherit; }
 .card-wrapper { perspective: 1200px; }
 
 .invitation-card {
+  /* Re-purposed: look like a closed envelope */
   position: relative;
   width: min(82vw,420px);
-  aspect-ratio: .68;
+  aspect-ratio: 1.15; /* taller to fit envelope flap */
   padding: 0;
   border: 0;
-  border-radius: 4px;
-  overflow: hidden;
+  border-radius: 6px;
+  overflow: visible; /* allow flap to rotate */
   cursor: pointer;
   color: #211c16;
-  background:
-    radial-gradient(circle at 50% 20%, rgba(255,255,255,.25), transparent 30%),
-    linear-gradient(135deg,#f4e8cb 0%,#e9d7ae 48%,#f0e1c0 100%);
+  background: linear-gradient(180deg,#efe2c4 0%,#ecd9b7 100%);
   box-shadow: 0 35px 80px rgba(0,0,0,.5), 0 8px 25px rgba(0,0,0,.35);
   transform-style: preserve-3d;
-  transition: box-shadow .4s ease, filter .4s ease;
+  transition: box-shadow .4s ease, filter .4s ease, transform .6s ease;
+  display: block;
 }
+
+/* Envelope structure */
+.card-wrapper { perspective: 1200px; }
+.invitation-card .envelope {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+/* The triangular flap sitting on top of the envelope */
+.envelope .flap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 52%;
+  background: linear-gradient(180deg,#e6d3ab 0%,#e9d6b1 100%);
+  transform-origin: top center;
+  border-bottom: 1px solid rgba(0,0,0,.06);
+  box-shadow: 0 8px 18px rgba(0,0,0,.18) inset;
+  z-index: 4;
+  clip-path: polygon(0 0, 100% 0, 50% 100%); /* triangle */
+}
+
+/* Inner card that sits inside the envelope */
+.envelope .inner-card {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  top: 38%;
+  bottom: 6%;
+  background: linear-gradient(180deg,#f7f0dc 0%,#f2e7c7 100%);
+  border-radius: 6px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  z-index: 2;
+  padding: 2.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transform: translateY(0%);
+}
+
+/* Seal sits where the flap meets the envelope */
+.card-seal {
+  position: absolute;
+  left: 50%;
+  top: 34%;
+  transform: translate(-50%,-50%);
+  z-index: 5;
+}
+.seal {
+  width: 74px;
+  height: 74px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #d9c17c;
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.12), transparent 30%), #6b1f19;
+  border: 6px solid rgba(128,42,36,.95);
+  box-shadow: inset 0 -6px 14px rgba(0,0,0,.25), 0 8px 20px rgba(0,0,0,.35);
+  font-size: 1.5rem;
+  position: relative;
+  overflow: visible;
+}
+
+/* fragments used to emulate a cracking wax seal */
+.seal-frag {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #7a201d;
+  border-radius: 3px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%,-50%);
+  z-index: 6;
+}
+
+/* small visual shine while closed */
+.invitation-card .card-shine { display: none; }
+
+/* make inner card content use existing card-content styles */
+.card-content { inset: 0; padding: 0; }
+
+/* responsive tweaks */
+@media (max-width: 600px) {
+  .seal { width: 62px; height: 62px; }
+  .envelope .inner-card { top: 42%; padding: 1.5rem; }
+}
+
 
 .invitation-card:hover {
   box-shadow: 0 45px 100px rgba(0,0,0,.55), 0 10px 35px rgba(0,0,0,.4);
@@ -228,24 +322,6 @@ button { font: inherit; }
   font-size: 1.1rem;
   font-style: italic;
   line-height: 1.6;
-}
-
-.card-seal { margin-top: 2rem; }
-
-.seal {
-  width: 70px;
-  height: 70px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  color: #d9c17c;
-  background:
-    radial-gradient(circle at 35% 30%, rgba(255,255,255,.15), transparent 30%),
-    #35503b;
-  border: 3px solid rgba(200,168,91,.65);
-  box-shadow: inset 0 0 0 3px rgba(20,37,29,.2), 0 5px 12px rgba(0,0,0,.2);
-  font-size: 1.5rem;
 }
 
 .open-label {
@@ -417,3 +493,4 @@ button { font: inherit; }
     transition-duration: .01ms !important;
   }
 }
+
