@@ -224,7 +224,6 @@ button { font: inherit; }
 .inner-wrapper.pulled {
   z-index: 9;
 }
-}
 
 /* inner card that slides up (the letter) — positioned relative inside the wrapper */
 .inner-card {
@@ -240,11 +239,14 @@ button { font: inherit; }
   justify-content: center;
   transform: translateZ(0);
   z-index: 2; /* default behind front face */
+  opacity: 0;
+  transition: opacity 220ms ease, transform 220ms ease;
 }
 
 /* when pulled, the inner card should sit above the front but beneath the flap */
 .inner-card.pulled {
   z-index: 9;
+  opacity: 1;
 }
 
 /* seal + fragments (back side) */

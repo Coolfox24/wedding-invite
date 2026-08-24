@@ -71,8 +71,8 @@ export default function InvitationCard({ opened, onOpen }: InvitationCardProps) 
     setPulled(true);
     // allow style z-index to apply before animating (next tick)
     await new Promise((r) => setTimeout(r, 20));
-    await innerControls.start({ y: -18, transition: { duration: 0.16, ease: "easeOut" } });
-    await innerControls.start({ y: -160, rotate: -3, transition: { type: "spring", stiffness: 120, damping: 16 } });
+    await innerControls.start({ opacity: 1, y: -18, scale: 1.01, transition: { duration: 0.16, ease: "easeOut" } });
+    await innerControls.start({ opacity: 1, y: -160, rotate: -3, scale: 1.02, transition: { type: "spring", stiffness: 120, damping: 16 } });
 
     // small settle then reveal app content
     await new Promise((r) => setTimeout(r, 160));
@@ -137,7 +137,7 @@ export default function InvitationCard({ opened, onOpen }: InvitationCardProps) 
 
           {/* inner-wrapper masks the inner card so it looks like it's being pulled out */}
           <div className={"inner-wrapper" + (pulled ? " pulled" : "")}>
-            <motion.div className={"inner-card" + (pulled ? " pulled" : "")} animate={innerControls as any} initial={{ y: 0, rotate: 0 }}>
+            <motion.div className={"inner-card" + (pulled ? " pulled" : "")} animate={innerControls as any} initial={{ y: 0, rotate: 0, opacity: 0, scale: 1 }}>
               <div className="card-content">
                 <div className="card-symbol">✦</div>
                 <p className="card-kicker">A WEDDING INVITATION</p>
