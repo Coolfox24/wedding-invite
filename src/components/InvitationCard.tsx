@@ -136,7 +136,7 @@ export default function InvitationCard({ opened, onOpen }: InvitationCardProps) 
           </div>
 
           {/* inner-wrapper masks the inner card so it looks like it's being pulled out */}
-          <div className="inner-wrapper">
+          <div className={"inner-wrapper" + (pulled ? " pulled" : "")}>
             <motion.div className={"inner-card" + (pulled ? " pulled" : "")} animate={innerControls as any} initial={{ y: 0, rotate: 0 }}>
               <div className="card-content">
                 <div className="card-symbol">✦</div>

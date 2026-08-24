@@ -220,6 +220,12 @@ button { font: inherit; }
   pointer-events: none;
 }
 
+/* when pulled, the wrapper must rise above the front so the letter can be seen */
+.inner-wrapper.pulled {
+  z-index: 9;
+}
+}
+
 /* inner card that slides up (the letter) — positioned relative inside the wrapper */
 .inner-card {
   position: relative;
