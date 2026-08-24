@@ -116,34 +116,79 @@ button { font: inherit; }
 
 .card-wrapper { perspective: 1200px; }
 
+/* Envelope: front/back faces (replace earlier flap implementation) */
 .invitation-card {
-  /* Re-purposed: look like a closed envelope */
   position: relative;
   width: min(82vw,420px);
-  aspect-ratio: 1.15; /* taller to fit envelope flap */
+  aspect-ratio: 1.15;
   padding: 0;
   border: 0;
-  border-radius: 6px;
-  overflow: visible; /* allow flap to rotate */
+  border-radius: 8px;
+  overflow: visible;
   cursor: pointer;
-  color: #211c16;
   background: linear-gradient(180deg,#efe2c4 0%,#ecd9b7 100%);
-  box-shadow: 0 35px 80px rgba(0,0,0,.5), 0 8px 25px rgba(0,0,0,.35);
+  box-shadow: 0 35px 80px rgba(0,0,0,.45);
   transform-style: preserve-3d;
-  transition: box-shadow .4s ease, filter .4s ease, transform .6s ease;
-  display: block;
 }
 
 /* Envelope structure */
 .card-wrapper { perspective: 1200px; }
-.invitation-card .envelope {
+/* envelope container that rotates (flip) */
+.envelope {
   position: relative;
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
 }
 
-/* The triangular flap sitting on top of the envelope */
+/* faces (front and back) */
+.face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  box-shadow: inset 0 -4px 0 rgba(0,0,0,0.03);
+}
+
+.face.front {
+  z-index: 5;
+  background: linear-gradient(180deg,#efe2c4 0%,#ecd9b7 100%);
+  transform: rotateY(0deg);
+  padding: 1.6rem;
+}
+
+/* front address block */
+.front-address {
+  text-align: center;
+  color: #243226;
+}
+.front-address .addr-label {
+  font-family: "Cinzel", serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.25em;
+  color: #8b6d3a;
+  text-transform: uppercase;
+}
+.front-address .addr-name {
+  margin-top: 0.5rem;
+  font-family: "IM Fell English", serif;
+  font-style: italic;
+  color: #2b3025;
+  font-size: 1.25rem;
+}
+
+/* back face shows the seal */
+.face.back {
+  transform: rotateY(180deg);
+  z-index: 6;
+  background: linear-gradient(180deg,#efe2c4 0%,#ecd9b7 100%);
+}
+
+/* Flap that lifts up from the back (rectangular for realistic opening) */
 .envelope .flap {
   position: absolute;
   left: 0;
@@ -154,37 +199,54 @@ button { font: inherit; }
   transform-origin: top center;
   border-bottom: 1px solid rgba(0,0,0,.06);
   box-shadow: 0 8px 18px rgba(0,0,0,.18) inset;
-  z-index: 4;
-  clip-path: polygon(0 0, 100% 0, 50% 100%); /* triangle */
+  z-index: 10;
+  clip-path: none;
+  border-radius: 8px 8px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Inner card that sits inside the envelope */
-.envelope .inner-card {
+/* wrapper that masks the inner card so it appears to slide out of the envelope mouth */
+.inner-wrapper {
   position: absolute;
   left: 6%;
   right: 6%;
-  top: 38%;
+  top: 36%;
   bottom: 6%;
-  background: linear-gradient(180deg,#f7f0dc 0%,#f2e7c7 100%);
+  overflow: hidden;
+  z-index: 2; /* keep beneath the front face initially */
   border-radius: 6px;
-  box-shadow: 0 10px 30px rgba(0,0,0,.25);
-  z-index: 2;
-  padding: 2.25rem 1.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  transform: translateY(0%);
+  pointer-events: none;
 }
 
-/* Seal sits where the flap meets the envelope */
+/* inner card that slides up (the letter) — positioned relative inside the wrapper */
+.inner-card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg,#f7f0dc 0%,#f2e7c7 100%);
+  border-radius: 6px;
+  box-shadow: 0 18px 40px rgba(0,0,0,.22);
+  padding: 2.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateZ(0);
+  z-index: 2; /* default behind front face */
+}
+
+/* when pulled, the inner card should sit above the front but beneath the flap */
+.inner-card.pulled {
+  z-index: 9;
+}
+
+/* seal + fragments (back side) */
 .card-seal {
-  position: absolute;
-  left: 50%;
-  top: 34%;
-  transform: translate(-50%,-50%);
-  z-index: 5;
+  position: relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 .seal {
   width: 74px;
@@ -193,16 +255,13 @@ button { font: inherit; }
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  color: #d9c17c;
   background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.12), transparent 30%), #6b1f19;
   border: 6px solid rgba(128,42,36,.95);
   box-shadow: inset 0 -6px 14px rgba(0,0,0,.25), 0 8px 20px rgba(0,0,0,.35);
-  font-size: 1.5rem;
   position: relative;
   overflow: visible;
 }
 
-/* fragments used to emulate a cracking wax seal */
 .seal-frag {
   position: absolute;
   width: 12px;
@@ -475,6 +534,19 @@ button { font: inherit; }
   font-style: italic;
 }
 
+/* make sure the envelope flipping doesn't hide the inner card */
+.envelope,
+.face,
+.inner-card {
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+}
+
+/* reduce motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .envelope { transition: none !important; }
+}
+
 @media (max-width: 600px) {
   .intro { top: 5vh; }
   .landing { padding-top: 8rem; }
@@ -494,3 +566,159 @@ button { font: inherit; }
   }
 }
 
+
+
+.invitation-card {
+  position: relative;
+  width: min(82vw, 420px);
+  aspect-ratio: 1.15;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  overflow: visible;
+  cursor: pointer;
+  background: linear-gradient(180deg, #efe2c4 0%, #ecd9b7 100%);
+  box-shadow: 0 35px 80px rgba(0,0,0,.45);
+  transform-style: preserve-3d;
+}
+
+.envelope {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+.face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.face.front {
+  z-index: 5;
+  background: linear-gradient(180deg, #efe2c4 0%, #ecd9b7 100%);
+  transform: rotateY(0deg);
+  padding: 1.6rem;
+}
+
+.front-address {
+  text-align: center;
+  color: #243226;
+}
+.front-address .addr-label {
+  font-family: "Cinzel", serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.25em;
+  color: #8b6d3a;
+  text-transform: uppercase;
+}
+.front-address .addr-name {
+  margin-top: 0.5rem;
+  font-family: "IM Fell English", serif;
+  font-style: italic;
+  color: #2b3025;
+  font-size: 1.25rem;
+}
+
+.face.back {
+  transform: rotateY(180deg);
+  z-index: 6;
+  background: linear-gradient(180deg, #efe2c4 0%, #ecd9b7 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Flap that lifts up from the back */
+.flap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 52%;
+  background: linear-gradient(180deg, #e6d3ab 0%, #e9d6b1 100%);
+  border-radius: 8px 8px 0 0;
+  box-shadow: inset 0 4px 10px rgba(0,0,0,0.08);
+  transform-origin: top center;
+  transform-style: preserve-3d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.seal-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.seal {
+  width: 74px;
+  height: 74px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.12), transparent 30%), #6b1f19;
+  border: 6px solid rgba(128, 42, 36, .95);
+  box-shadow: inset 0 -6px 14px rgba(0,0,0,.25), 0 8px 20px rgba(0,0,0,.35);
+  position: relative;
+  overflow: visible;
+}
+
+/* Particle burst from seal */
+.particle-burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.burst-particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  left: 50%;
+  top: 50%;
+  background: #c8a85b;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(200, 168, 91, 0.6);
+  transform: translate(-50%, -50%);
+}
+
+/* Inner card that slides up (the letter) */
+.inner-card {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  top: 38%;
+  bottom: 6%;
+  background: linear-gradient(180deg, #f7f0dc 0%, #f2e7c7 100%);
+  border-radius: 6px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.22);
+  z-index: 3;
+  padding: 2.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transform: translateZ(0);
+}
+
+.envelope, .face, .inner-card {
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flap, .envelope { transition: none !important; }
+}
