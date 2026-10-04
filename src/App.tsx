@@ -35,6 +35,7 @@ function BotanicalMark({ className = "" }: { className?: string }) {
 
 function App() {
   const [opened, setOpened] = useState(false);
+  const [opening, setOpening] = useState(false);
   const countdown = useCountdown();
 
   return (
@@ -54,13 +55,13 @@ function App() {
             <motion.div
               className="intro"
               initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              animate={{ opacity: opening ? 0 : 1, y: opening ? -12 : 0 }}
               transition={{ delay: 0.6, duration: 1 }}
             >
               <div className="intro-symbol">✦</div>
               <h1>A Special Invitation</h1>
             </motion.div>
-            <InvitationCard opened={false} onOpen={() => setOpened(true)} />
+            <InvitationCard opened={false} onOpening={() => setOpening(true)} onOpen={() => setOpened(true)} />
           </motion.div>
         ) : (
           <motion.div
