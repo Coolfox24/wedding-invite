@@ -20,7 +20,7 @@ export default function InvitationLetter({ controls, pulled, cleared, raised }: 
         <div className="card-content">
           <div className="card-symbol">✦</div>
           <p className="card-kicker">A WEDDING INVITATION</p>
-          <h2 className="card-names">S <span>&amp;</span> M</h2>
+          <h2 className="card-names">M <span>&amp;</span> S</h2>
           <div className="card-divider"><span>✧</span></div>
           <p className="card-message">A new chapter<br />begins</p>
           <motion.p

@@ -16,6 +16,8 @@ html, body, #root {
   margin: 0;
 }
 
+html { scroll-behavior: smooth; }
+
 body {
   min-height: 100vh;
   overflow-x: hidden;
@@ -775,13 +777,15 @@ button { font: inherit; }
   min-height: 100vh;
   overflow-x: clip;
   overflow-y: visible;
-  background: #f6f2e8;
+  background: #0d1712;
 }
 
 .invitation-page.is-open .ambient-glow {
   position: fixed;
   background: radial-gradient(ellipse at 50% 12%, rgba(185, 195, 172, .14), transparent 48%);
   z-index: 0;
+  animation: none;
+  opacity: 1;
 }
 
 .invitation-page.is-open .particles {
@@ -791,8 +795,9 @@ button { font: inherit; }
 }
 
 .wedding-site {
+  --paper-frame-width: min(1440px, calc(100% - 56px));
   --ivory: #f6f2e8;
-  --paper: #eee8d9;
+  --paper: #eee3c9;
   --olive: #344538;
   --olive-soft: #61735c;
   --sage: #c2cbbb;
@@ -801,16 +806,66 @@ button { font: inherit; }
   --ink: #33392f;
   --muted: #777464;
   position: relative;
+  isolation: isolate;
   z-index: 2;
   color: var(--ink);
-  background: var(--ivory);
+  background: transparent;
   font-family: "IM Fell English", Georgia, serif;
+}
+
+.wedding-site [id] { scroll-margin-top: 96px; }
+
+/* Reveal each information block as it enters the viewport. */
+.wedding-site [data-scroll-reveal] > * {
+  --reveal-opacity: 1;
+  opacity: 0;
+  translate: 0 22px;
+  transition: opacity .68s ease, translate .68s cubic-bezier(.22, 1, .36, 1);
+}
+.wedding-site [data-scroll-reveal].is-visible > * { opacity: var(--reveal-opacity); translate: 0 0; }
+.wedding-site .site-hero > .hero-botanical { --reveal-opacity: .25; }
+.wedding-site [data-scroll-reveal].is-visible > *:nth-child(2) { transition-delay: 90ms; }
+.wedding-site [data-scroll-reveal].is-visible > *:nth-child(3) { transition-delay: 160ms; }
+.wedding-site [data-scroll-reveal].is-visible > *:nth-child(4) { transition-delay: 230ms; }
+.wedding-site [data-scroll-stagger] > * {
+  opacity: 0;
+  translate: 0 18px;
+  transition: opacity .55s ease, translate .55s cubic-bezier(.22, 1, .36, 1);
+}
+.wedding-site [data-scroll-reveal].is-visible [data-scroll-stagger] > * { opacity: 1; translate: 0 0; }
+.wedding-site [data-scroll-reveal].is-visible [data-scroll-stagger] > *:nth-child(2) { transition-delay: 80ms; }
+.wedding-site [data-scroll-reveal].is-visible [data-scroll-stagger] > *:nth-child(3) { transition-delay: 150ms; }
+.wedding-site [data-scroll-reveal].is-visible [data-scroll-stagger] > *:nth-child(4) { transition-delay: 220ms; }
+.wedding-site [data-scroll-reveal].is-visible [data-scroll-stagger] > *:nth-child(5) { transition-delay: 290ms; }
+.wedding-site [data-scroll-reveal].is-visible [data-scroll-stagger] > *:nth-child(6) { transition-delay: 360ms; }
+
+/* Aged invitation paper, framed by the same deep evergreen as the envelope. */
+.wedding-site::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: var(--paper-frame-width);
+  transform: translateX(-50%);
+  border-inline: 1px solid rgba(184, 157, 106, .32);
+  background:
+    radial-gradient(ellipse at 50% 5%, rgba(255, 253, 239, .78), transparent 45%),
+    radial-gradient(ellipse at 0% 50%, rgba(139, 104, 54, .1), transparent 22%),
+    radial-gradient(ellipse at 100% 82%, rgba(139, 104, 54, .09), transparent 24%),
+    repeating-linear-gradient(0deg, rgba(106, 81, 45, .008) 0 1px, transparent 1px 9px),
+    linear-gradient(100deg, #dfd0ad 0%, #eee3c9 5%, #f3ead6 50%, #eee3c9 95%, #dfd0ad 100%);
+  background-attachment: fixed, fixed, fixed, scroll, scroll;
+  box-shadow: 0 0 54px rgba(0, 0, 0, .2);
 }
 
 .site-header {
   position: sticky;
   top: 0;
   z-index: 10;
+  width: var(--paper-frame-width);
+  margin-inline: auto;
   min-height: 76px;
   padding: 0 clamp(1.25rem, 5vw, 5rem);
   display: grid;
@@ -818,7 +873,7 @@ button { font: inherit; }
   align-items: center;
   gap: 2rem;
   color: var(--olive);
-  background: rgba(246, 242, 232, .93);
+  background: rgba(239, 230, 208, .94);
   border-bottom: 1px solid rgba(81, 96, 76, .15);
   backdrop-filter: blur(12px);
 }
@@ -842,8 +897,7 @@ button { font: inherit; }
   text-decoration: none;
   text-transform: uppercase;
 }
-.site-header nav a:hover,
-.header-date:hover { color: var(--gold); }
+.site-header nav a:hover { color: var(--gold); }
 .header-date { justify-self: end; }
 
 .site-hero {
@@ -856,13 +910,12 @@ button { font: inherit; }
   justify-content: center;
   overflow: hidden;
   text-align: center;
-  background:
-    radial-gradient(ellipse at 50% 48%, rgba(255,255,255,.88), transparent 48%),
-    linear-gradient(180deg, #f5f1e7, #f2eee3);
+  background: radial-gradient(ellipse at 50% 48%, rgba(255, 253, 239, .55), transparent 58%);
 }
-.hero-botanical { position: absolute; top: 14%; width: clamp(110px, 15vw, 195px); color: #81907a; opacity: .25; }
+.hero-botanical { position: fixed; z-index: 0; top: 14vh; width: clamp(110px, 15vw, 195px); color: #81907a; opacity: .25; pointer-events: none; }
 .hero-botanical-left { left: max(-2rem, 2vw); transform: rotate(-18deg); }
 .hero-botanical-right { right: max(-2rem, 2vw); transform: scaleX(-1) rotate(-18deg); }
+.wedding-site .site-hero > .hero-botanical { opacity: .25; translate: none; transition: none; }
 .eyebrow {
   margin: 0 0 .85rem;
   color: var(--gold, #a78a59);
@@ -932,7 +985,7 @@ button { font: inherit; }
 .invitation-copy-card .copy-date { color: var(--gold, #a78a59); font-family: "Cinzel", serif; font-size: .75rem; letter-spacing: .2em; text-transform: uppercase; }
 .copy-botanical { position: absolute; right: 1.5rem; bottom: 0; width: 110px; color: #87917c; opacity: .24; }
 
-.countdown-section { padding: 5.8rem 1.5rem; color: #f3efe2; background: var(--olive, #344538); text-align: center; }
+.countdown-section { width: var(--paper-frame-width); margin-inline: auto; padding: 5.8rem 1.5rem; color: #f3efe2; background: var(--olive, #344538); text-align: center; }
 .countdown-intro .eyebrow { color: #d6c497; }
 .countdown-intro h2 { margin: 0; font-family: "Cinzel", serif; font-size: clamp(1.8rem, 4vw, 3.1rem); font-weight: 400; }
 .countdown-intro h2 em { color: #d3c08f; font-family: "IM Fell English", serif; font-weight: 400; }
@@ -944,7 +997,7 @@ button { font: inherit; }
 .countdown-date { margin: 2rem 0 0; color: #d6c497; font-family: "Cinzel", serif; font-size: .75rem; letter-spacing: .24em; }
 .countdown-date span { padding: 0 .45rem; }
 
-.faith-section { position: relative; max-width: none; padding: 8rem 1.5rem; background: #eeeee5; text-align: center; }
+.faith-section { position: relative; width: var(--paper-frame-width); margin-inline: auto; padding: 8rem 1.5rem; background: rgba(221, 215, 194, .62); text-align: center; }
 .faith-mark { margin-bottom: 1.2rem; color: var(--gold, #a78a59); font-size: 2rem; }
 .faith-section h2 { font-size: clamp(1.9rem, 4vw, 3.2rem); }
 .faith-section blockquote { margin: 2.1rem auto .8rem; color: #575b4e; font-size: clamp(1.15rem, 2.2vw, 1.55rem); font-style: italic; line-height: 1.8; }
@@ -980,14 +1033,6 @@ button { font: inherit; }
 .text-link { display: inline-block; margin-top: 1rem; padding: 0 0 .4rem; border: 0; border-bottom: 1px solid rgba(167, 138, 89, .7); color: var(--olive, #344538); background: none; font-family: "Cinzel", serif; font-size: .65rem; letter-spacing: .12em; text-decoration: none; text-transform: uppercase; }
 .text-link span { padding-left: .45rem; color: var(--gold, #a78a59); }
 .text-link:disabled { opacity: .65; cursor: default; }
-
-.timeline-section { padding-top: 4rem; }
-.timeline { position: relative; width: min(720px, 100%); margin: auto; }
-.timeline::before { content: ""; position: absolute; top: 1.2rem; bottom: 1.2rem; left: 112px; width: 1px; background: rgba(167, 138, 89, .48); }
-.timeline-item { position: relative; min-height: 82px; display: grid; grid-template-columns: 88px 48px 1fr; align-items: center; gap: 1.5rem; }
-.timeline-time { color: var(--gold, #a78a59); font-family: "Cinzel", serif; font-size: .7rem; letter-spacing: .08em; }
-.timeline-dot { z-index: 1; width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid rgba(167, 138, 89, .55); border-radius: 50%; color: var(--olive, #344538); background: var(--ivory, #f6f2e8); font-family: "Cinzel", serif; font-size: .58rem; }
-.timeline-title { color: var(--olive, #344538); font-size: 1.25rem; }
 
 .style-section { display: grid; grid-template-columns: 1.2fr .8fr; gap: 1.3rem; padding-top: 3rem; }
 .dress-code,
@@ -1051,6 +1096,13 @@ button { font: inherit; }
 .faq-list summary::after { content: "+"; position: absolute; right: .4rem; color: var(--gold, #a78a59); font-size: 1.2rem; }
 .faq-list details[open] summary::after { content: "−"; }
 .faq-list details p { margin: 0; padding: 0 2.5rem 1.3rem .2rem; color: #68695d; line-height: 1.7; }
+.faq-list details p a { color: var(--olive, #344538); text-decoration-color: rgba(91, 107, 85, .5); text-underline-offset: .2em; }
+.faq-list details p a:hover { color: #7d6842; }
+.faq-contacts { display: flex; flex-wrap: wrap; gap: .25rem 3rem; padding: 0 2.5rem 1.3rem .2rem; }
+.faq-list details .faq-contacts p { min-width: min(220px, 100%); margin: 0; padding: 0; line-height: 1.8; }
+.faq-contacts strong { color: var(--olive, #344538); font-family: "Cinzel", serif; font-weight: 500; }
+.faq-map { overflow: hidden; margin: 0 .2rem 1.4rem; border: 1px solid rgba(91, 107, 85, .28); border-radius: 4px; background: #ded4bf; }
+.faq-map iframe { display: block; width: 100%; height: clamp(220px, 34vw, 340px); border: 0; }
 
 .site-footer { position: relative; padding: 6.5rem 1.5rem; color: #f4f0e5; background: #344538; text-align: center; }
 .footer-flower { margin-bottom: 1.2rem; color: #d6c497; font-size: 2rem; }
@@ -1066,11 +1118,13 @@ button { font: inherit; }
 .site-footer .verse-reference { color: #d6c497; }
 
 @media (max-width: 760px) {
+  .wedding-site { --paper-frame-width: calc(100% - 16px); }
   .site-header { min-height: 68px; grid-template-columns: auto 1fr; gap: .7rem; }
   .site-header nav { grid-column: 1 / -1; grid-row: 2; justify-content: center; flex-wrap: wrap; gap: .5rem 1.3rem; padding-bottom: .8rem; }
   .header-date { grid-column: 2; grid-row: 1; }
   .site-hero { min-height: 680px; padding-top: 5rem; }
-  .hero-botanical { top: 15%; width: 25vw; opacity: .28; }
+  .hero-botanical { top: 15vh; width: 25vw; opacity: .28; }
+  .wedding-site .site-hero > .hero-botanical { opacity: .28; }
   .section-shell { width: min(100% - 2rem, 620px); padding: 5rem 0; }
   .invitation-copy-card { min-height: 330px; padding: 4rem 1.5rem; }
   .desktop-break { display: none; }
@@ -1093,11 +1147,17 @@ button { font: inherit; }
   .countdown-unit:nth-child(3)::before { display: none; }
   .faith-lines { flex-direction: column; }
   .faith-lines span + span::before { padding-right: .6rem; }
-  .timeline::before { left: 72px; }
-  .timeline-item { grid-template-columns: 52px 40px 1fr; gap: .8rem; }
-  .timeline-dot { width: 36px; height: 36px; }
-  .timeline-title { font-size: 1.05rem; }
   .dress-columns { grid-template-columns: 1fr; gap: 1rem; }
   .gallery-placeholder { min-height: 125px; }
   .rsvp-questions > div { padding-left: 2.3rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .wedding-site [data-scroll-reveal] > *,
+  .wedding-site [data-scroll-stagger] > * {
+    opacity: var(--reveal-opacity, 1);
+    translate: none;
+    transition: none;
+  }
 }

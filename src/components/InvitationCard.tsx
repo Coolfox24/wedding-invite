@@ -27,7 +27,7 @@ export default function InvitationCard({ opened, onOpening, onOpen }: Invitation
 
   const particles: SealParticle[] = Array.from({ length: 16 }, (_, i) => ({
     id: i,
-    delay: Math.random() * 0.15,
+    delay: Math.random() * 0.09,
   }));
 
   async function handleOpen() {
@@ -41,12 +41,12 @@ export default function InvitationCard({ opened, onOpening, onOpen }: Invitation
       rotateX: [0, 8, 3, 0],
       rotateZ: [0, 3, -1, 0],
       scale: [1, 0.94, 0.96, 1],
-      transition: { duration: 0.35, times: [0, 0.35, 0.72, 1], ease: "linear" },
+      transition: { duration: 0.21, times: [0, 0.35, 0.72, 1], ease: "linear" },
     });
     setFrontHidden(true);
     await envelopeControls.start({
       rotateY: 180,
-      transition: { duration: 0.35, ease: "linear" },
+      transition: { duration: 0.21, ease: "linear" },
     });
     // Swap the turned envelope to a face-on back view. The matching 180° child
     // rotations are removed at the same time, so this is visually continuous.
@@ -56,22 +56,31 @@ export default function InvitationCard({ opened, onOpening, onOpen }: Invitation
       flapControls.start({ rotateY: 0, transition: { duration: 0 } }),
     ]);
     // Give guests a clear look at the M & S wax seal before it opens.
-    await new Promise((r) => setTimeout(r, 520));
+    await new Promise((r) => setTimeout(r, 312));
 
     // Lift the sealed flap, then let warm light fill the envelope.
-    flapControls.start({ rotateX: -28, transition: { duration: 0.26, ease: "easeOut" } });
-    await new Promise((r) => setTimeout(r, 140));
+    flapControls.start({ rotateX: -28, transition: { duration: 0.156, ease: "easeOut" } });
+    await new Promise((r) => setTimeout(r, 84));
 
     // 2) open the flap fully while light blooms beneath it.
     const flapOpening = flapControls.start({
       rotateX: -120,
       z: 20,
-      transition: { duration: 0.78, ease: [0.22, 1, 0.36, 1] },
+      transition: { duration: 0.468, ease: [0.22, 1, 0.36, 1] },
+    });
+    // Reveal the letter through the envelope mouth while the flap and light open,
+    // instead of waiting until the flap has finished moving.
+    setPocketOpen(true);
+    const letterReveal = innerControls.start({
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: { duration: 0.432, ease: "easeOut" },
     });
     lightControls.start({
       opacity: [0, 1, 0.82],
       scale: [0.72, 1.18, 1.35],
-      transition: { duration: 1.25, ease: "easeOut" },
+      transition: { duration: 0.75, ease: "easeOut" },
     });
 
     setBursting(true);
@@ -81,7 +90,7 @@ export default function InvitationCard({ opened, onOpening, onOpen }: Invitation
       const dx = Math.cos(angle) * distance;
       const dy = Math.sin(angle) * distance - 30 - Math.random() * 30;
       const rot = (Math.random() - 0.5) * 220;
-      const dur = 0.7 + Math.random() * 0.45;
+      const dur = 0.42 + Math.random() * 0.27;
       return {
         opacity: [1, 1, 0],
         x: [0, dx],
@@ -94,31 +103,25 @@ export default function InvitationCard({ opened, onOpening, onOpen }: Invitation
     await flapOpening;
 
     // Let the light fill the opening, then show the letter sitting in the envelope.
-    await new Promise((r) => setTimeout(r, 220));
+    await new Promise((r) => setTimeout(r, 132));
 
     setFlapMovedBack(true);
-    setPocketOpen(true);
-    await innerControls.start({
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: { duration: 0.35, ease: "easeOut" },
-    });
+    await letterReveal;
     // Hold the letter in the envelope briefly so guests see it before it is pulled out.
-    await new Promise((r) => setTimeout(r, 420));
+    await new Promise((r) => setTimeout(r, 252));
     setPulled(true);
     // Rise inside the envelope's clipping box first.
     await innerControls.start({
       y: -130,
       scale: 1.02,
-      transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1] },
+      transition: { duration: 0.39, ease: [0.22, 1, 0.36, 1] },
     });
     // Let the letter clear the envelope edge while it remains behind the open flap.
     setLetterCleared(true);
     await innerControls.start({
-      y: -320,
+      y: -370,
       scale: 1.02,
-      transition: { duration: 0.85, ease: [0.22, 1, 0.36, 1] },
+      transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
     });
     // Once clear of the flap, bring it forward and let it settle above the envelope.
     setLetterRaised(true);
@@ -126,11 +129,11 @@ export default function InvitationCard({ opened, onOpening, onOpen }: Invitation
       y: -178,
       rotate: -2,
       scale: 1.02,
-      transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
+      transition: { duration: 0.42, ease: [0.22, 1, 0.36, 1] },
     });
 
     // small settle then reveal app content
-    await new Promise((r) => setTimeout(r, 1100));
+    await new Promise((r) => setTimeout(r, 660));
     onOpen();
   }
 
