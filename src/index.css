@@ -16,6 +16,8 @@ html, body, #root {
   margin: 0;
 }
 
+html { scroll-behavior: smooth; }
+
 body {
   min-height: 100vh;
   overflow-x: hidden;
@@ -78,7 +80,7 @@ button { font: inherit; }
 
 .intro {
   position: absolute;
-  top: 8vh;
+  top: clamp(1.5rem, 5vh, 3rem);
   text-align: center;
   pointer-events: none;
 }
@@ -114,28 +116,393 @@ button { font: inherit; }
   font-style: italic;
 }
 
-.card-wrapper { perspective: 1200px; }
+.intro-date {
+  margin: .55rem 0 0;
+  color: rgba(240,228,200,.7);
+  font-family: "Cinzel", serif;
+  font-size: .62rem;
+  letter-spacing: .12em;
+}
 
+.card-wrapper { perspective: 1050px; perspective-origin: 50% 46%; }
+
+/* Envelope: front/back faces (replace earlier flap implementation) */
 .invitation-card {
   position: relative;
   width: min(82vw,420px);
-  aspect-ratio: .68;
+  aspect-ratio: 1.15;
   padding: 0;
   border: 0;
-  border-radius: 4px;
-  overflow: hidden;
+  border-radius: 8px;
+  overflow: visible;
   cursor: pointer;
-  color: #211c16;
-  background:
-    radial-gradient(circle at 50% 20%, rgba(255,255,255,.25), transparent 30%),
-    linear-gradient(135deg,#f4e8cb 0%,#e9d7ae 48%,#f0e1c0 100%);
-  box-shadow: 0 35px 80px rgba(0,0,0,.5), 0 8px 25px rgba(0,0,0,.35);
+  background: transparent;
+  box-shadow: none;
   transform-style: preserve-3d;
-  transition: box-shadow .4s ease, filter .4s ease;
 }
 
+/* Envelope structure */
+/* envelope container that rotates (flip) */
+.envelope {
+  position: relative;
+  z-index: 4;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+/* faces (front and back) */
+.face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  box-shadow: inset 0 -4px 0 rgba(0,0,0,0.03);
+}
+
+.face.front {
+  z-index: 4;
+  background: linear-gradient(180deg, #efe2c4 0%, #ecd9b7 100%);
+  transform: translateZ(6px);
+  padding: 1.6rem;
+}
+
+.envelope.front-hidden .face.front {
+  visibility: hidden;
+}
+
+/* front address block */
+.front-address {
+  text-align: center;
+  color: #334637;
+}
+.front-address .addr-name {
+  font-family: "IM Fell English", Georgia, serif;
+  font-size: clamp(1.7rem, 4.7vw, 2.25rem);
+  font-style: italic;
+  letter-spacing: .015em;
+}
+.envelope-corner {
+  position: absolute;
+  color: rgba(157, 129, 78, .62);
+  font-family: "IM Fell English", Georgia, serif;
+  font-size: 1.45rem;
+  line-height: 1;
+  pointer-events: none;
+}
+.envelope-corner-tl { top: 17px; left: 19px; }
+.envelope-corner-tr { top: 17px; right: 19px; transform: scaleX(-1); }
+.envelope-corner-bl { bottom: 17px; left: 19px; transform: scaleY(-1); }
+.envelope-corner-br { right: 19px; bottom: 17px; transform: scale(-1); }
+
+/* back face shows the seal */
+.face.back {
+  z-index: 0;
+  transform: rotateY(180deg) translateZ(3px);
+  background: linear-gradient(180deg,#efe2c4 0%,#ecd9b7 100%);
+  overflow: hidden;
+}
+
+/* Once the envelope has turned, present its reverse as a normal layered scene.
+   This keeps its paper body behind the letter instead of allowing 3D depth to
+   escape the envelope's stacking context. */
+.envelope.flipped .face.back {
+  transform: none;
+  -webkit-backface-visibility: visible;
+  backface-visibility: visible;
+}
+
+.back-pocket-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  transform: rotateY(180deg) translateZ(6.5px);
+  transform-style: preserve-3d;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  pointer-events: none;
+  background:
+    linear-gradient(145deg, rgba(143, 111, 58, .1), transparent 45%),
+    linear-gradient(35deg, transparent 49.6%, rgba(119,91,48,.2) 50%, transparent 50.4%),
+    linear-gradient(145deg, #f0e4cb, #e4d0ae);
+  clip-path: polygon(0 0, 50% 58%, 100% 0, 100% 100%, 0 100%);
+}
+
+.envelope.flipped .back-pocket-layer {
+  transform: none;
+}
+
+.envelope-light {
+  position: absolute;
+  z-index: 5;
+  inset: 10% 9% 0;
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 44%, rgba(255, 255, 231, .96) 0%, rgba(255, 230, 166, .76) 22%, rgba(255, 205, 111, .4) 43%, rgba(255, 194, 87, .1) 61%, transparent 75%);
+  filter: blur(8px);
+  mix-blend-mode: screen;
+  visibility: hidden;
+  transform: translateZ(8px);
+}
+
+.envelope-light { visibility: visible; }
+
+.envelope .particle-burst {
+  visibility: hidden;
+}
+
+.envelope.is-bursting .particle-burst {
+  visibility: visible;
+}
+
+.envelope-edges {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+.envelope-edge {
+  position: absolute;
+  display: block;
+  background: linear-gradient(180deg, #d2c09b, #b6a27b 55%, #d8c7a4);
+  box-shadow: inset 0 1px rgba(255,255,255,.55), inset 0 -1px rgba(65,48,23,.12);
+}
+
+.edge-top,
+.edge-bottom {
+  left: 0;
+  right: 0;
+  height: 12px;
+}
+
+.edge-top { top: -6px; transform: rotateX(90deg); }
+.edge-bottom { bottom: -6px; transform: rotateX(-90deg); }
+
+.edge-left,
+.edge-right {
+  top: 0;
+  bottom: 0;
+  width: 12px;
+}
+
+.edge-left { left: -6px; transform: rotateY(-90deg); }
+.edge-right { right: -6px; transform: rotateY(90deg); }
+
+/* Flap that lifts up from the back (rectangular for realistic opening) */
+.envelope .flap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 62%;
+  background: transparent;
+  transform-origin: top center;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flap-surface {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px 8px 0 0;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.flap-outer {
+  transform: translateZ(.5px);
+  border-bottom: 1px solid rgba(0,0,0,.08);
+  background: linear-gradient(145deg, #f3e8d0 0%, #e5d1ae 80%);
+  box-shadow: inset 0 4px 10px rgba(0,0,0,.08);
+}
+
+.flap-inner {
+  transform: rotateY(180deg) translateZ(.5px);
+  background: linear-gradient(180deg, #f1e4c7 0%, #e8d7b6 100%);
+  box-shadow: inset 0 -5px 14px rgba(55, 43, 24, .08);
+}
+
+/* After opening, move flap behind the pulled letter */
+.envelope .flap.behind {
+  /* Keep the open flap over the letter until the letter clears the opening. */
+  z-index: 1;
+  opacity: 1;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.12) inset;
+}
+
+.envelope .flap .seal-marker {
+  position: absolute;
+  z-index: 8;
+  top: 88%;
+  left: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%) translateZ(2px);
+  transform-style: preserve-3d;
+}
+
+.particle-burst {
+  position: absolute;
+  top: 52%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.burst-particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  left: 50%;
+  top: 50%;
+  border-radius: 50%;
+  background: #c8a85b;
+  box-shadow: 0 0 7px rgba(255, 226, 142, .85);
+  transform: translate(-50%, -50%);
+}
+
+/* wrapper that masks the inner card so it appears to slide out of the envelope mouth */
+.inner-wrapper {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 6;
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+/* The letter sits over the flap but under the pocket mask while it emerges. */
+.inner-wrapper.pulled {
+  z-index: 6;
+  overflow: hidden;
+}
+
+.inner-wrapper.cleared {
+  overflow: visible;
+}
+
+.inner-wrapper.raised {
+  z-index: 8;
+}
+
+.pocket-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  clip-path: polygon(0 0, 50% 58%, 100% 0, 100% 100%, 0 100%);
+  background:
+    linear-gradient(145deg, rgba(143, 111, 58, .1), transparent 45%),
+    linear-gradient(35deg, transparent 49.6%, rgba(119,91,48,.2) 50%, transparent 50.4%),
+    linear-gradient(145deg, #f0e4cb, #e4d0ae);
+}
+
+.pocket-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* inner card that slides up (the letter) — positioned relative inside the wrapper */
+.inner-card {
+  position: absolute;
+  left: 6%;
+  top: 36%;
+  width: 88%;
+  height: 58%;
+  background: linear-gradient(180deg,#f7f0dc 0%,#f2e7c7 100%);
+  border-radius: 6px;
+  box-shadow: 0 14px 34px rgba(0,0,0,.19), 0 0 22px rgba(255, 221, 143, .3);
+  padding: 2.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  opacity: 1;
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+/* when pulled, the inner card should sit above the front but beneath the flap */
+.inner-card.pulled {
+  opacity: 1;
+  box-shadow: 0 18px 36px rgba(0,0,0,.2), 0 0 34px rgba(255, 222, 143, .65), inset 0 0 0 1px rgba(255,255,255,.75);
+}
+
+/* seal + fragments (back side) */
+.card-seal {
+  position: relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.seal {
+  width: 74px;
+  height: 74px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.12), transparent 30%), #6b1f19;
+  border: 6px solid rgba(128,42,36,.95);
+  box-shadow: inset 0 -6px 14px rgba(0,0,0,.25), 0 8px 20px rgba(0,0,0,.35);
+  position: relative;
+  overflow: visible;
+}
+
+.seal-initials {
+  color: #e6c99d;
+  font-family: "Cinzel", serif;
+  font-size: .92rem;
+  letter-spacing: .05em;
+}
+.seal-initials i { color: #d7b67f; font-family: "IM Fell English", serif; font-size: .82em; }
+
+.seal-frag {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #7a201d;
+  border-radius: 3px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%,-50%);
+  z-index: 6;
+}
+
+/* small visual shine while closed */
+.invitation-card .card-shine { display: none; }
+
+/* make inner card content use existing card-content styles */
+.card-content { inset: 0; padding: 0; }
+
+/* responsive tweaks */
+@media (max-width: 600px) {
+  .seal { width: 62px; height: 62px; }
+  .inner-card { padding: 1.5rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
 .invitation-card:hover {
-  box-shadow: 0 45px 100px rgba(0,0,0,.55), 0 10px 35px rgba(0,0,0,.4);
+  box-shadow: none;
 }
 
 .invitation-card:focus-visible {
@@ -228,24 +595,6 @@ button { font: inherit; }
   font-size: 1.1rem;
   font-style: italic;
   line-height: 1.6;
-}
-
-.card-seal { margin-top: 2rem; }
-
-.seal {
-  width: 70px;
-  height: 70px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  color: #d9c17c;
-  background:
-    radial-gradient(circle at 35% 30%, rgba(255,255,255,.15), transparent 30%),
-    #35503b;
-  border: 3px solid rgba(200,168,91,.65);
-  box-shadow: inset 0 0 0 3px rgba(20,37,29,.2), 0 5px 12px rgba(0,0,0,.2);
-  font-size: 1.5rem;
 }
 
 .open-label {
@@ -399,8 +748,20 @@ button { font: inherit; }
   font-style: italic;
 }
 
+/* make sure the envelope flipping doesn't hide the inner card */
+.envelope,
+.inner-card {
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+}
+
+/* reduce motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .envelope { transition: none !important; }
+}
+
 @media (max-width: 600px) {
-  .intro { top: 5vh; }
+  .intro { top: clamp(1.25rem, 4vh, 2.25rem); }
   .landing { padding-top: 8rem; }
   .invitation-card { width: min(82vw,360px); }
   .card-content { inset: 34px; }
@@ -410,10 +771,393 @@ button { font: inherit; }
   .revealed-invitation { padding: 6rem 2rem; }
 }
 
+/* Revealed wedding website */
+.invitation-page.is-open {
+  display: block;
+  min-height: 100vh;
+  overflow-x: clip;
+  overflow-y: visible;
+  background: #0d1712;
+}
+
+.invitation-page.is-open .ambient-glow {
+  position: fixed;
+  background: radial-gradient(ellipse at 50% 12%, rgba(185, 195, 172, .14), transparent 48%);
+  z-index: 0;
+  animation: none;
+  opacity: 1;
+}
+
+.invitation-page.is-open .particles {
+  position: fixed;
+  z-index: 1;
+  opacity: .34;
+}
+
+.wedding-site {
+  --paper-frame-width: min(1440px, calc(100% - 56px));
+  --ivory: #f6f2e8;
+  --paper: #eee3c9;
+  --olive: #344538;
+  --olive-soft: #61735c;
+  --sage: #c2cbbb;
+  --sage-pale: #e5e9df;
+  --gold: #a78a59;
+  --ink: #33392f;
+  --muted: #777464;
+  position: relative;
+  isolation: isolate;
+  z-index: 2;
+  color: var(--ink);
+  background: transparent;
+  font-family: "IM Fell English", Georgia, serif;
+}
+
+.wedding-site [id] { scroll-margin-top: 96px; }
+
+/* Reveal each information block as it enters the viewport. */
+.wedding-site [data-scroll-reveal] > * {
+  --reveal-opacity: 1;
+  opacity: 0;
+  translate: 0 22px;
+  transition: opacity .68s ease, translate .68s cubic-bezier(.22, 1, .36, 1);
+}
+.wedding-site [data-scroll-reveal].is-visible > * { opacity: var(--reveal-opacity); translate: 0 0; }
+.wedding-site .site-hero > .hero-botanical { --reveal-opacity: .25; }
+.wedding-site [data-scroll-reveal].is-visible > *:nth-child(2) { transition-delay: 90ms; }
+.wedding-site [data-scroll-reveal].is-visible > *:nth-child(3) { transition-delay: 160ms; }
+.wedding-site [data-scroll-reveal].is-visible > *:nth-child(4) { transition-delay: 230ms; }
+.wedding-site [data-scroll-stagger] > * {
+  opacity: 0;
+  translate: 0 18px;
+  transition: opacity .55s ease, translate .55s cubic-bezier(.22, 1, .36, 1);
+}
+.wedding-site [data-scroll-reveal].is-visible [data-scroll-stagger] > * { opacity: 1; translate: 0 0; }
+.wedding-site [data-scroll-reveal].is-visible [data-scroll-stagger] > *:nth-child(2) { transition-delay: 80ms; }
+.wedding-site [data-scroll-reveal].is-visible [data-scroll-stagger] > *:nth-child(3) { transition-delay: 150ms; }
+.wedding-site [data-scroll-reveal].is-visible [data-scroll-stagger] > *:nth-child(4) { transition-delay: 220ms; }
+.wedding-site [data-scroll-reveal].is-visible [data-scroll-stagger] > *:nth-child(5) { transition-delay: 290ms; }
+.wedding-site [data-scroll-reveal].is-visible [data-scroll-stagger] > *:nth-child(6) { transition-delay: 360ms; }
+
+/* Aged invitation paper, framed by the same deep evergreen as the envelope. */
+.wedding-site::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: var(--paper-frame-width);
+  transform: translateX(-50%);
+  border-inline: 1px solid rgba(184, 157, 106, .32);
+  background:
+    radial-gradient(ellipse at 50% 5%, rgba(255, 253, 239, .78), transparent 45%),
+    radial-gradient(ellipse at 0% 50%, rgba(139, 104, 54, .1), transparent 22%),
+    radial-gradient(ellipse at 100% 82%, rgba(139, 104, 54, .09), transparent 24%),
+    repeating-linear-gradient(0deg, rgba(106, 81, 45, .008) 0 1px, transparent 1px 9px),
+    linear-gradient(100deg, #dfd0ad 0%, #eee3c9 5%, #f3ead6 50%, #eee3c9 95%, #dfd0ad 100%);
+  background-attachment: fixed, fixed, fixed, scroll, scroll;
+  box-shadow: 0 0 54px rgba(0, 0, 0, .2);
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  width: var(--paper-frame-width);
+  margin-inline: auto;
+  min-height: 76px;
+  padding: 0 clamp(1.25rem, 5vw, 5rem);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 2rem;
+  color: var(--olive);
+  background: rgba(239, 230, 208, .94);
+  border-bottom: 1px solid rgba(81, 96, 76, .15);
+  backdrop-filter: blur(12px);
+}
+
+.wordmark {
+  width: max-content;
+  color: var(--olive);
+  font-family: "Cinzel", serif;
+  font-size: 1.25rem;
+  letter-spacing: .12em;
+  text-decoration: none;
+}
+.wordmark span { color: var(--gold); font-family: "IM Fell English", serif; font-style: italic; }
+.site-header nav { display: flex; align-items: center; gap: clamp(1rem, 3vw, 2.5rem); }
+.site-header nav a,
+.header-date {
+  color: var(--olive);
+  font-family: "Cinzel", serif;
+  font-size: .62rem;
+  letter-spacing: .13em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+.site-header nav a:hover { color: var(--gold); }
+.header-date { justify-self: end; }
+
+.site-hero {
+  position: relative;
+  min-height: min(850px, calc(100vh - 76px));
+  padding: 7rem 1.5rem 6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  text-align: center;
+  background: radial-gradient(ellipse at 50% 48%, rgba(255, 253, 239, .55), transparent 58%);
+}
+.hero-botanical { position: fixed; z-index: 0; top: 14vh; width: clamp(110px, 15vw, 195px); color: #81907a; opacity: .25; pointer-events: none; }
+.hero-botanical-left { left: max(-2rem, 2vw); transform: rotate(-18deg); }
+.hero-botanical-right { right: max(-2rem, 2vw); transform: scaleX(-1) rotate(-18deg); }
+.wedding-site .site-hero > .hero-botanical { opacity: .25; translate: none; transition: none; }
+.eyebrow {
+  margin: 0 0 .85rem;
+  color: var(--gold, #a78a59);
+  font-family: "Cinzel", serif;
+  font-size: .64rem;
+  letter-spacing: .24em;
+  line-height: 1.7;
+  text-transform: uppercase;
+}
+.site-hero .eyebrow { color: #7d805f; }
+.hero-invite { margin: 0; color: #646659; font-size: clamp(1rem, 2vw, 1.3rem); font-style: italic; }
+.site-hero h1 {
+  margin: 1.15rem 0 .4rem;
+  color: var(--olive, #344538);
+  font-family: "Cinzel", serif;
+  font-size: clamp(2.2rem, 6vw, 5rem);
+  font-weight: 400;
+  letter-spacing: .015em;
+  line-height: 1.12;
+}
+.site-hero h1 span { color: var(--gold, #a78a59); font-family: "IM Fell English", serif; font-size: .66em; font-style: italic; }
+.hero-rule { width: min(300px, 52vw); height: 1px; position: relative; margin: 1.7rem 0 1.3rem; background: rgba(99, 112, 88, .38); }
+.hero-rule i { position: absolute; top: 50%; left: 50%; padding: 0 .8rem; color: var(--gold, #a78a59); background: #f4f0e6; font-style: normal; transform: translate(-50%, -50%); }
+.hero-date { margin: 0; color: var(--olive, #344538); font-family: "Cinzel", serif; font-size: clamp(.82rem, 1.6vw, 1rem); letter-spacing: .18em; text-transform: uppercase; }
+.hero-date span { padding: 0 .6rem; color: var(--gold, #a78a59); }
+.hero-note { margin: 1.4rem 0 0; color: var(--muted, #777464); font-size: 1.15rem; font-style: italic; }
+.scroll-cue { position: absolute; bottom: 2rem; display: flex; flex-direction: column; gap: .5rem; color: #737963; font-family: "Cinzel", serif; font-size: .56rem; letter-spacing: .17em; text-decoration: none; text-transform: uppercase; }
+.scroll-cue span { color: var(--gold, #a78a59); font-size: 1.1rem; }
+
+.section-shell { width: min(1120px, calc(100% - 3rem)); margin: 0 auto; padding: clamp(5rem, 9vw, 8.5rem) 0; }
+.section-heading { margin: 0 auto 3.2rem; text-align: center; }
+.section-heading h2,
+.faith-section h2,
+.story-copy h2,
+.dress-code h2,
+.palette-card h2,
+.rsvp-card h2,
+.extra-card h2 {
+  margin: 0;
+  color: var(--olive, #344538);
+  font-family: "Cinzel", serif;
+  font-size: clamp(2rem, 5vw, 3.6rem);
+  font-weight: 400;
+  line-height: 1.2;
+}
+.heading-flourish { display: block; margin-top: 1rem; color: var(--gold, #a78a59); font-size: 1.3rem; }
+.invitation-section { padding-top: 7.5rem; }
+.invitation-copy-card {
+  position: relative;
+  width: min(780px, 100%);
+  min-height: 370px;
+  margin: auto;
+  padding: 5rem 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(133, 119, 83, .38);
+  outline: 1px solid rgba(133, 119, 83, .2);
+  outline-offset: 9px;
+  background: rgba(255, 254, 249, .64);
+  text-align: center;
+}
+.invitation-copy-card > p { position: relative; z-index: 1; margin: .45rem 0; color: #55584d; font-size: clamp(1.12rem, 2vw, 1.4rem); line-height: 1.8; }
+.invitation-copy-card .copy-signoff { margin-top: 1.6rem; color: var(--olive, #344538); font-family: "Cinzel", serif; font-size: clamp(1.5rem, 3vw, 2.2rem); }
+.copy-signoff span { padding: 0 .3rem; color: var(--gold, #a78a59); font-family: "IM Fell English", serif; font-style: italic; }
+.invitation-copy-card .copy-date { color: var(--gold, #a78a59); font-family: "Cinzel", serif; font-size: .75rem; letter-spacing: .2em; text-transform: uppercase; }
+.copy-botanical { position: absolute; right: 1.5rem; bottom: 0; width: 110px; color: #87917c; opacity: .24; }
+
+.countdown-section { width: var(--paper-frame-width); margin-inline: auto; padding: 5.8rem 1.5rem; color: #f3efe2; background: var(--olive, #344538); text-align: center; }
+.countdown-intro .eyebrow { color: #d6c497; }
+.countdown-intro h2 { margin: 0; font-family: "Cinzel", serif; font-size: clamp(1.8rem, 4vw, 3.1rem); font-weight: 400; }
+.countdown-intro h2 em { color: #d3c08f; font-family: "IM Fell English", serif; font-weight: 400; }
+.countdown { width: min(620px, 100%); margin: 2.7rem auto 1.2rem; display: grid; grid-template-columns: repeat(4, 1fr); }
+.countdown-unit { position: relative; display: flex; flex-direction: column; gap: .6rem; }
+.countdown-unit + .countdown-unit::before { content: ""; position: absolute; left: 0; top: 10%; height: 76%; width: 1px; background: rgba(241, 230, 202, .25); }
+.countdown-unit strong { color: #f4eddf; font-family: "Cinzel", serif; font-size: clamp(2rem, 6vw, 4rem); font-weight: 400; font-variant-numeric: tabular-nums; }
+.countdown-unit span { color: #d1cbb8; font-family: "Cinzel", serif; font-size: .61rem; letter-spacing: .18em; text-transform: uppercase; }
+.countdown-date { margin: 2rem 0 0; color: #d6c497; font-family: "Cinzel", serif; font-size: .75rem; letter-spacing: .24em; }
+.countdown-date span { padding: 0 .45rem; }
+
+.faith-section { position: relative; width: var(--paper-frame-width); margin-inline: auto; padding: 8rem 1.5rem; background: rgba(221, 215, 194, .62); text-align: center; }
+.faith-mark { margin-bottom: 1.2rem; color: var(--gold, #a78a59); font-size: 2rem; }
+.faith-section h2 { font-size: clamp(1.9rem, 4vw, 3.2rem); }
+.faith-section blockquote { margin: 2.1rem auto .8rem; color: #575b4e; font-size: clamp(1.15rem, 2.2vw, 1.55rem); font-style: italic; line-height: 1.8; }
+.verse-reference { color: var(--gold, #a78a59); font-family: "Cinzel", serif; font-size: .7rem; letter-spacing: .2em; text-transform: uppercase; }
+.faith-lines { margin: 2.7rem auto 0; display: flex; flex-wrap: wrap; justify-content: center; gap: .7rem 2.2rem; color: var(--olive, #344538); font-size: 1.05rem; font-style: italic; }
+.faith-lines span + span::before { content: "✦"; padding-right: 2.2rem; color: var(--gold, #a78a59); font-size: .65rem; }
+
+.story-section { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: clamp(3rem, 8vw, 7rem); }
+.story-art { text-align: center; }
+.story-art-frame { position: relative; width: min(420px, 100%); aspect-ratio: .87; margin: auto; display: grid; place-items: center; border: 1px solid rgba(167, 138, 89, .48); background: linear-gradient(150deg, #dfe4d9, #c4d0c1 45%, #ece8dc); box-shadow: 16px 16px 0 rgba(52, 69, 56, .08); }
+.story-art-frame::before { content: ""; position: absolute; inset: 12px; border: 1px solid rgba(255,255,255,.7); }
+.story-botanical { position: absolute; bottom: 0; left: 50%; height: 88%; color: #63775f; opacity: .53; transform: translateX(-50%); }
+.story-art-frame > span { z-index: 1; color: #fffdf4; font-family: "Cinzel", serif; font-size: clamp(2.6rem, 5vw, 4.6rem); letter-spacing: .08em; text-shadow: 0 2px 16px rgba(41, 60, 45, .23); }
+.story-art-frame > span i { color: #efe1bf; font-family: "IM Fell English", serif; font-size: .65em; }
+.art-caption { margin: 1.25rem 0 0; color: var(--muted, #777464); font-size: .95rem; font-style: italic; }
+.story-copy h2 { margin-bottom: 1.7rem; }
+.story-copy > p:not(.eyebrow) { max-width: 480px; color: #626255; font-size: 1.13rem; line-height: 1.9; }
+.story-flourish { display: block; margin-top: 1.8rem; color: var(--gold, #a78a59); font-size: 1.5rem; }
+
+.details-section { padding-top: 3rem; }
+.event-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+.event-card { position: relative; min-height: 520px; padding: clamp(2rem, 5vw, 4rem); border: 1px solid rgba(167, 138, 89, .42); background: #fbf9f1; text-align: center; }
+.event-card-sage { background: #e9ece3; }
+.event-number { position: absolute; top: 1.2rem; right: 1.4rem; color: rgba(167, 138, 89, .55); font-family: "Cinzel", serif; font-size: .7rem; letter-spacing: .16em; }
+.event-card .eyebrow { margin-top: 1.3rem; }
+.event-card h3 { margin: 0; color: var(--olive, #344538); font-family: "Cinzel", serif; font-size: 2rem; font-weight: 400; }
+.event-date { margin: .8rem 0; color: #80785f; font-family: "Cinzel", serif; font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; }
+.event-rule { width: 48px; height: 1px; margin: 1.6rem auto; background: var(--gold, #a78a59); }
+.event-label { margin: 1.2rem 0 .25rem; color: var(--gold, #a78a59); font-family: "Cinzel", serif; font-size: .58rem; letter-spacing: .2em; }
+.event-card > p:not(.eyebrow):not(.event-date):not(.event-label) { margin: .3rem 0; color: #4f574d; font-size: 1.08rem; }
+.event-card .event-address { font-style: italic; }
+.event-description { max-width: 330px; margin: 1.4rem auto !important; line-height: 1.7; }
+.text-link { display: inline-block; margin-top: 1rem; padding: 0 0 .4rem; border: 0; border-bottom: 1px solid rgba(167, 138, 89, .7); color: var(--olive, #344538); background: none; font-family: "Cinzel", serif; font-size: .65rem; letter-spacing: .12em; text-decoration: none; text-transform: uppercase; }
+.text-link span { padding-left: .45rem; color: var(--gold, #a78a59); }
+.text-link:disabled { opacity: .65; cursor: default; }
+
+.style-section { display: grid; grid-template-columns: 1.2fr .8fr; gap: 1.3rem; padding-top: 3rem; }
+.dress-code,
+.palette-card { padding: clamp(2rem, 4vw, 3.5rem); border: 1px solid rgba(167, 138, 89, .38); background: #fbf9f1; }
+.dress-code h2,
+.palette-card h2 { font-size: clamp(1.8rem, 3vw, 2.5rem); }
+.dress-title { margin: 1.3rem 0 2rem; color: var(--gold, #a78a59); font-family: "Cinzel", serif; font-size: .82rem; letter-spacing: .1em; text-transform: uppercase; }
+.dress-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.dress-columns h3 { margin: 0 0 .45rem; color: var(--olive, #344538); font-family: "Cinzel", serif; font-size: .9rem; font-weight: 500; }
+.dress-columns p { margin: 0; color: #646659; line-height: 1.7; }
+.olive-note { margin: 1.8rem 0 0; padding-top: 1.2rem; border-top: 1px solid rgba(167, 138, 89, .25); color: var(--olive, #344538); font-style: italic; }
+.olive-note span { padding-right: .5rem; color: var(--gold, #a78a59); font-style: normal; }
+.palette-card { display: flex; flex-direction: column; justify-content: center; background: #e7ebe2; }
+.swatches { display: flex; margin: 2rem 0 1rem; }
+.swatches span { width: 42px; aspect-ratio: 1; margin-right: -5px; border: 3px solid #e7ebe2; border-radius: 50%; box-shadow: 0 2px 8px rgba(32, 45, 31, .12); }
+.palette-card > p:last-child { color: #626558; font-size: .95rem; line-height: 1.8; }
+.palette-card > p:last-child i { color: var(--gold, #a78a59); font-style: normal; }
+
+.gallery-section { padding-top: 4rem; }
+.gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
+.gallery-frame { margin: 0; padding: .55rem .55rem .8rem; border: 1px solid rgba(167, 138, 89, .35); background: #fbf9f1; box-shadow: 0 10px 26px rgba(45, 54, 40, .06); }
+.gallery-placeholder { position: relative; min-height: 210px; display: grid; place-items: center; overflow: hidden; background: linear-gradient(145deg, #dce2d7, #b7c5b6 55%, #e7e1d4); }
+.gallery-frame:nth-child(2n) .gallery-placeholder { background: linear-gradient(145deg, #ebe4d5, #c9c5ad 55%, #d8dfd4); }
+.gallery-placeholder svg { position: absolute; bottom: -35%; left: 50%; width: 53%; color: #536c55; opacity: .42; transform: translateX(-50%); }
+.gallery-placeholder > span { z-index: 1; color: rgba(255, 255, 247, .94); font-family: "Cinzel", serif; font-size: 2rem; letter-spacing: .12em; text-shadow: 0 2px 10px rgba(29, 47, 32, .3); }
+.gallery-placeholder > span i { color: #eee1bf; font-family: "IM Fell English", serif; }
+.gallery-frame figcaption { padding: .8rem .25rem 0; color: #666657; font-size: .95rem; font-style: italic; text-align: center; }
+
+.rsvp-section { padding-top: 4rem; }
+.rsvp-card { position: relative; overflow: hidden; padding: clamp(2.5rem, 6vw, 5rem); border: 1px solid rgba(167, 138, 89, .55); outline: 1px solid rgba(167, 138, 89, .25); outline-offset: 9px; background: #eef0e8; text-align: center; }
+.rsvp-card h2 { font-size: clamp(2rem, 4.5vw, 3.5rem); }
+.rsvp-card > p:not(.eyebrow):not(.rsvp-deadline) { color: #626659; font-size: 1.1rem; }
+.rsvp-botanical { position: absolute; top: -2.5rem; right: -1.5rem; width: 170px; color: #71816c; opacity: .18; }
+.rsvp-questions { width: min(680px, 100%); margin: 2.5rem auto 0; text-align: left; }
+.rsvp-questions > div { position: relative; padding: 1.15rem 0 1.15rem 3.2rem; border-top: 1px solid rgba(91, 107, 85, .2); }
+.rsvp-questions > div > span { position: absolute; left: 0; top: 1.35rem; color: var(--gold, #a78a59); font-family: "Cinzel", serif; font-size: .65rem; }
+.rsvp-questions p { margin: 0 0 .35rem; color: var(--olive, #344538); font-size: 1.12rem; }
+.rsvp-questions small { color: #77796d; font-size: .9rem; font-style: italic; }
+.rsvp-deadline { margin: 2rem 0 0; color: #626659; font-size: 1.05rem; font-style: italic; }
+.rsvp-deadline strong { color: var(--olive, #344538); font-weight: 400; }
+.plus-one-note { max-width: 670px; margin: 3rem auto 0; color: #68695d; text-align: center; }
+.plus-one-note span { color: var(--gold, #a78a59); font-size: 1rem; font-style: italic; }
+.plus-one-note p { line-height: 1.75; }
+
+.extras-section { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.3rem; padding-top: 3rem; }
+.extra-card { min-height: 360px; padding: clamp(2rem, 4vw, 3.2rem); border: 1px solid rgba(167, 138, 89, .38); background: #fbf9f1; text-align: center; }
+.stay-card { background: #e9ece3; }
+.extra-icon { display: block; margin-bottom: 1rem; color: var(--gold, #a78a59); font-size: 1.8rem; }
+.extra-card h2 { font-size: clamp(1.6rem, 3vw, 2.3rem); }
+.extra-card > p:not(.eyebrow) { color: #626659; line-height: 1.7; }
+.extra-card .text-link { margin-top: .5rem; }
+.gift-link-placeholder { margin: 1rem auto 0; color: #858575; font-size: .8rem; font-style: italic; }
+.hotel-placeholder { max-width: 330px; margin: 1.4rem auto 0; padding-top: 1rem; border-top: 1px solid rgba(91, 107, 85, .2); display: flex; flex-direction: column; gap: .25rem; color: #727467; font-size: .92rem; }
+.hotel-placeholder strong { color: var(--olive, #344538); font-family: "Cinzel", serif; font-size: .8rem; font-weight: 500; }
+
+.faq-section { padding-top: 4rem; }
+.faq-list { width: min(780px, 100%); margin: auto; border-top: 1px solid rgba(91, 107, 85, .25); }
+.faq-list details { border-bottom: 1px solid rgba(91, 107, 85, .25); }
+.faq-list summary { position: relative; padding: 1.3rem 2.4rem 1.3rem .2rem; color: var(--olive, #344538); cursor: pointer; font-family: "Cinzel", serif; font-size: .9rem; list-style: none; }
+.faq-list summary::-webkit-details-marker { display: none; }
+.faq-list summary::after { content: "+"; position: absolute; right: .4rem; color: var(--gold, #a78a59); font-size: 1.2rem; }
+.faq-list details[open] summary::after { content: "−"; }
+.faq-list details p { margin: 0; padding: 0 2.5rem 1.3rem .2rem; color: #68695d; line-height: 1.7; }
+.faq-list details p a { color: var(--olive, #344538); text-decoration-color: rgba(91, 107, 85, .5); text-underline-offset: .2em; }
+.faq-list details p a:hover { color: #7d6842; }
+.faq-contacts { display: flex; flex-wrap: wrap; gap: .25rem 3rem; padding: 0 2.5rem 1.3rem .2rem; }
+.faq-list details .faq-contacts p { min-width: min(220px, 100%); margin: 0; padding: 0; line-height: 1.8; }
+.faq-contacts strong { color: var(--olive, #344538); font-family: "Cinzel", serif; font-weight: 500; }
+.faq-map { overflow: hidden; margin: 0 .2rem 1.4rem; border: 1px solid rgba(91, 107, 85, .28); border-radius: 4px; background: #ded4bf; }
+.faq-map iframe { display: block; width: 100%; height: clamp(220px, 34vw, 340px); border: 0; }
+
+.site-footer { position: relative; padding: 6.5rem 1.5rem; color: #f4f0e5; background: #344538; text-align: center; }
+.footer-flower { margin-bottom: 1.2rem; color: #d6c497; font-size: 2rem; }
+.site-footer .eyebrow { color: #d6c497; }
+.site-footer h2 { margin: 0 auto 1.2rem; font-family: "Cinzel", serif; font-size: clamp(1.5rem, 3.3vw, 2.5rem); font-weight: 400; line-height: 1.55; }
+.site-footer > p:not(.eyebrow) { color: #e0ddcf; font-size: 1.1rem; line-height: 1.8; }
+.footer-with-love { display: block; margin-top: 2rem; color: #d6c497; font-style: italic; }
+.site-footer > strong { display: block; margin-top: .4rem; font-family: "Cinzel", serif; font-size: clamp(1.45rem, 3vw, 2rem); font-weight: 400; }
+.site-footer > strong i { color: #d6c497; font-family: "IM Fell English", serif; font-size: .8em; }
+.footer-date { display: block; margin-top: 1rem; color: #d6c497; font-family: "Cinzel", serif; font-size: .75rem; letter-spacing: .22em; }
+.footer-date i { padding: 0 .4rem; font-style: normal; }
+.site-footer blockquote { margin: 2.4rem 0 .5rem; color: #e5e0d2; font-size: 1.1rem; font-style: italic; }
+.site-footer .verse-reference { color: #d6c497; }
+
+@media (max-width: 760px) {
+  .wedding-site { --paper-frame-width: calc(100% - 16px); }
+  .site-header { min-height: 68px; grid-template-columns: auto 1fr; gap: .7rem; }
+  .site-header nav { grid-column: 1 / -1; grid-row: 2; justify-content: center; flex-wrap: wrap; gap: .5rem 1.3rem; padding-bottom: .8rem; }
+  .header-date { grid-column: 2; grid-row: 1; }
+  .site-hero { min-height: 680px; padding-top: 5rem; }
+  .hero-botanical { top: 15vh; width: 25vw; opacity: .28; }
+  .wedding-site .site-hero > .hero-botanical { opacity: .28; }
+  .section-shell { width: min(100% - 2rem, 620px); padding: 5rem 0; }
+  .invitation-copy-card { min-height: 330px; padding: 4rem 1.5rem; }
+  .desktop-break { display: none; }
+  .story-section { grid-template-columns: 1fr; gap: 3rem; }
+  .story-art-frame { width: min(340px, 85%); }
+  .story-copy { text-align: center; }
+  .story-copy > p:not(.eyebrow) { margin-left: auto; margin-right: auto; }
+  .event-cards, .style-section, .extras-section { grid-template-columns: 1fr; }
+  .event-card { min-height: auto; padding: 2rem; }
+  .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: .75rem; }
+  .gallery-placeholder { min-height: 160px; }
+}
+
+@media (max-width: 460px) {
+  .site-header nav a { font-size: .54rem; }
+  .header-date { font-size: .55rem; }
+  .site-hero { min-height: 610px; }
+  .hero-botanical { width: 29vw; top: 12%; }
+  .countdown { grid-template-columns: repeat(2, 1fr); gap: 1.5rem 0; }
+  .countdown-unit:nth-child(3)::before { display: none; }
+  .faith-lines { flex-direction: column; }
+  .faith-lines span + span::before { padding-right: .6rem; }
+  .dress-columns { grid-template-columns: 1fr; gap: 1rem; }
+  .gallery-placeholder { min-height: 125px; }
+  .rsvp-questions > div { padding-left: 2.3rem; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: .01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: .01ms !important;
+  html { scroll-behavior: auto; }
+  .wedding-site [data-scroll-reveal] > *,
+  .wedding-site [data-scroll-stagger] > * {
+    opacity: var(--reveal-opacity, 1);
+    translate: none;
+    transition: none;
   }
 }
