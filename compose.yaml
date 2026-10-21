@@ -1,0 +1,19 @@
+services:
+  wedding:
+    image: ghcr.io/coolfox24/wedding-invite:latest
+    platform: linux/arm64
+    restart: unless-stopped
+    init: true
+    ports:
+      # Suitable for cloudflared running directly on the same host.
+      - '127.0.0.1:3001:3001'
+    environment:
+      ALLOWED_ORIGINS: ${WEDDING_ORIGIN:?Set WEDDING_ORIGIN to your public HTTPS origin}
+      PUBLIC_BASE_URL: ${WEDDING_ORIGIN}/
+      # Enable only if all API access is through your trusted Cloudflare Tunnel.
+      TRUST_CLOUDFLARE_PROXY: 'false'
+    volumes:
+      - wedding-data:/data
+
+volumes:
+  wedding-data:
