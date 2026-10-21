@@ -119,10 +119,16 @@ jobs:
 
       - name: Publish tested image
         if: steps.image.outputs.publish == 'true'
-        env:
-          IMAGE_TAGS: ${{ steps.metadata.outputs.tags }}
-        shell: bash
-        run: |
-          while IFS= read -r tag; do
-            if [[ -n "$tag" ]]; then docker push "$tag"; fi
-          done <<< "$IMAGE_TAGS"
+        uses: docker/build-push-action@v7
+        with:
+          # Reuse the same builder, context, platform and labels as the tested
+          # build. Export directly to GHCR instead of pushing the daemon-loaded
+          # copy, avoiding a second serialization of the image's layers.
+          context: .
+          platforms: linux/arm64
+          push: true
+          tags: ${{ steps.metadata.outputs.tags }}
+          labels: ${{ steps.metadata.outputs.labels }}
+          cache-from: type=gha,scope=wedding-arm64
+          cache-to: type=gha,mode=max,scope=wedding-arm64
+          provenance: false

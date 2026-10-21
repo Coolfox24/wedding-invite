@@ -216,6 +216,13 @@ frontend assets, API authorization, and an RSVP surviving replacement of the
 container with the same database volume. GitHub Pages keeps its existing separate
 workflow and `/wedding-invite/` base.
 
+Publishing uses BuildKit's registry exporter after the smoke tests succeed. The
+publish step uses the same builder and build inputs, reusing its cached layers
+instead of uploading the Docker-daemon-loaded copy with `docker push`. This follows
+[Docker's test-before-push workflow](https://docs.docker.com/build/ci/github-actions/test-before-push/).
+If a publishing workflow is changed, commit/push the change and start a new run;
+re-running an old failed run uses that old commit's workflow definition.
+
 After successful tests, the workflow publishes to
 `ghcr.io/coolfox24/wedding-invite` using the repository's `GITHUB_TOKEN`:
 
