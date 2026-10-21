@@ -1,0 +1,5 @@
+invitation_key,invitation_label,guest_name,is_plus_one,expires_at
+alex-jamie,Alex and Jamie,Alex Example,false,
+alex-jamie,Alex and Jamie,Jamie Example,false,
+sam,Sam and guest,Sam Example,false,
+sam,Sam and guest,Guest of Sam,true,

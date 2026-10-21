@@ -1,0 +1,15 @@
+node_modules
+.git
+.claude
+.codex
+.agents
+dist
+dist-server
+data
+private
+.env
+.env.*
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.log

@@ -7,7 +7,12 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "api:dev": "node --experimental-strip-types --watch server/index.ts",
+    "api:build": "tsc -p tsconfig.server.json",
+    "api:start": "node dist-server/index.js",
+    "api:test": "node --experimental-strip-types --test server/api.test.ts",
+    "api:admin": "node --experimental-strip-types server/cli.ts"
   },
   "dependencies": {
     "framer-motion": "^13.1.0",
