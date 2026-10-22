@@ -54,7 +54,7 @@ test('a fresh fragment works if session storage is disabled', () => {
 test('API client sends credentials only in a bearer header to fixed API paths', async () => {
   const token = 'a'.repeat(43);
   let calls = 0;
-  const response = { label: 'Test Guest', guests: [{ id: 'test-id', name: 'Test Guest', isPlusOne: false }], expiresAt: null, rsvp: null, revision: 0, rsvpClosesAt: null, canRespond: true };
+  const response = { label: 'Test Guest', guests: [{ id: 'test-id', name: 'Test Guest', isPlusOne: false }], expiresAt: null, rsvp: null, revision: 0, rsvpClosesAt: null, canRespond: true, contacts: [] };
   const mock: typeof fetch = async (url, init) => {
     calls++;
     assert.equal(url, '/api/invitation');

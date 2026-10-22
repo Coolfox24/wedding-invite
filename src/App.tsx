@@ -5,7 +5,10 @@ import FloatingParticles from "./components/FloatingParticles";
 import MusicToggle from "./components/MusicToggle";
 import WeddingTimeline from "./components/WeddingTimeline";
 import RsvpForm from './components/RsvpForm';
+import InvitationGate from './components/InvitationGate';
+import ContactDetails from './components/ContactDetails';
 import type { InvitationSession } from './lib/invitation-session';
+import type { Invitation } from './lib/rsvp-api';
 
 const weddingDate = new Date(2027, 1, 2, 0, 0, 0);
 
@@ -38,6 +41,10 @@ function BotanicalMark({ className = "" }: { className?: string }) {
 }
 
 function App({ invitationSession }: { invitationSession: InvitationSession }) {
+  return <InvitationGate session={invitationSession}>{(invitation) => <WeddingInvitation invitationSession={invitationSession} invitation={invitation} />}</InvitationGate>;
+}
+
+function WeddingInvitation({ invitationSession, invitation }: { invitationSession: InvitationSession; invitation: Invitation }) {
   const [opened, setOpened] = useState(false);
   const [opening, setOpening] = useState(false);
   const countdown = useCountdown();
@@ -119,7 +126,7 @@ function App({ invitationSession }: { invitationSession: InvitationSession }) {
               <div className="intro-symbol">✦</div>
               <h1>A Special Invitation</h1>
             </motion.div>
-            <InvitationCard opened={false} onOpening={() => setOpening(true)} onOpen={() => setOpened(true)} />
+            <InvitationCard recipientName={invitation.label} opened={false} onOpening={() => setOpening(true)} onOpen={() => setOpened(true)} />
           </motion.div>
         ) : (
           <motion.div
@@ -160,6 +167,7 @@ function App({ invitationSession }: { invitationSession: InvitationSession }) {
               </div>
               <div className="invitation-copy-card">
                 <BotanicalMark className="copy-botanical" />
+                <p className="copy-recipient">Dear {invitation.label},</p>
                 <p>With grateful hearts,</p>
                 <p>we invite you to join us as we exchange vows<br className="desktop-break" /> and begin our journey as husband and wife.</p>
                 <p className="copy-signoff">Matt <span>&amp;</span> Sarah</p>
@@ -299,7 +307,7 @@ function App({ invitationSession }: { invitationSession: InvitationSession }) {
                 <p className="eyebrow">We hope you can join us</p>
                 <h2>Will You Join Us?</h2>
                 <p>We would be honoured to celebrate this special day with you.</p>
-                <RsvpForm session={invitationSession} />
+                <RsvpForm session={invitationSession} initialInvitation={invitation} />
                 <p className="rsvp-deadline">Kindly reply by <strong>Friday, 11 December 2026</strong></p>
               </div>
               <div className="plus-one-note"><span>With love,</span><p>Kindly note that invitations are intended for the guests named on the invitation. Please refer to the name(s) listed above for your invitation details.</p></div>
@@ -350,10 +358,7 @@ function App({ invitationSession }: { invitationSession: InvitationSession }) {
                 <details><summary>When should I RSVP?</summary><p>Please RSVP by Friday, 11 December 2026.</p></details>
                 <details>
                   <summary id="faq-contact">Who can I contact with questions?</summary>
-                  <div className="faq-contacts">
-                    <p><strong>Matt</strong><br /><a href="tel:+61492995379">04 9299 5379</a><br /><a href="mailto:mattjgoulden@gmail.com">mattjgoulden@gmail.com</a></p>
-                    <p><strong>Sarah</strong><br /><a href="tel:+61411180585">0411 180 585</a><br /><a href="mailto:sebaitan.05@gmail.com">sebaitan.05@gmail.com</a></p>
-                  </div>
+                  {invitation.contacts.length > 0 ? <ContactDetails contacts={invitation.contacts} /> : <p>Please contact Matt or Sarah using the details you already have.</p>}
                 </details>
               </div>
             </section>

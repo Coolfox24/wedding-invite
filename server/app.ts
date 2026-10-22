@@ -173,7 +173,7 @@ export function createApp(store: Store, config: Config, options: { staticDirecto
       }
       const closed = config.rsvpClosesAt !== null && Date.parse(config.rsvpClosesAt) <= now();
       if (req.method === 'GET') {
-        return send(res, 200, { ...store.view(invitation), rsvpClosesAt: config.rsvpClosesAt, canRespond: !closed });
+        return send(res, 200, { ...store.view(invitation), rsvpClosesAt: config.rsvpClosesAt, canRespond: !closed, contacts: config.hostContacts });
       }
       if (closed) throw new HttpError(403, 'rsvp_closed', 'The RSVP deadline has passed. Please contact the hosts.');
       const body = await jsonBody(req);
@@ -181,7 +181,7 @@ export function createApp(store: Store, config: Config, options: { staticDirecto
       if (config.rsvpClosesAt && Date.parse(config.rsvpClosesAt) <= now()) {
         throw new HttpError(403, 'rsvp_closed', 'The RSVP deadline has passed. Please contact the hosts.');
       }
-      send(res, 200, { ...store.save(token, body, now()), rsvpClosesAt: config.rsvpClosesAt, canRespond: true });
+      send(res, 200, { ...store.save(token, body, now()), rsvpClosesAt: config.rsvpClosesAt, canRespond: true, contacts: config.hostContacts });
     })().catch((error: unknown) => {
       req.resume();
       if (res.destroyed || res.writableEnded) return;

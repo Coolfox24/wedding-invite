@@ -116,6 +116,36 @@ test('RSVP updates are persistent, atomic, household scoped, and retry safe', as
   });
 });
 
+test('host contacts are private, require an active invitation and are never cached', async () => {
+  const contacts = [{ name: 'Host', phone: '+61400000000', phoneDisplay: '0400 000 000', email: 'private-host@example.com' }];
+  assert.deepEqual(readConfig({}).hostContacts, []);
+  assert.throws(() => readConfig({ HOST_CONTACTS_JSON: '{invalid' }), /HOST_CONTACTS_JSON/);
+  assert.throws(() => readConfig({ HOST_CONTACTS_JSON: JSON.stringify([{ ...contacts[0], phone: 'javascript:alert(1)' }]) }), /HOST_CONTACTS_JSON/);
+  await fixture(async ({ store, created, base }) => {
+    const token = created[0].token;
+    const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+    const body = responseBody(store, token);
+    const get = await fetch(`${base}/api/invitation`, { headers });
+    assert.equal(get.headers.get('cache-control'), 'no-store');
+    assert.deepEqual((await get.json() as { contacts: unknown }).contacts, contacts);
+    const put = await fetch(`${base}/api/rsvp`, { method: 'PUT', headers, body: JSON.stringify(body) });
+    assert.equal(put.headers.get('cache-control'), 'no-store');
+    assert.deepEqual((await put.json() as { contacts: unknown }).contacts, contacts);
+
+    store.revoke('alex');
+    store.db.prepare('UPDATE invitations SET expires_at = ? WHERE owner_key = ?').run('2020-01-01T00:00:00.000Z', 'sam');
+    for (const auth of [undefined, 'Bearer malformed', `Bearer ${'x'.repeat(43)}`, `Bearer ${token}`, `Bearer ${created[1].token}`]) {
+      for (const [path, method] of [['/api/invitation', 'GET'], ['/api/rsvp', 'PUT']] as const) {
+        const response = await fetch(`${base}${path}`, { method, headers: auth ? { Authorization: auth } : {} });
+        assert.equal(response.status, 401);
+        assert.equal(response.headers.get('cache-control'), 'no-store');
+        const text = await response.text();
+        assert.ok(!text.includes('contacts') && !text.includes(contacts[0].phone) && !text.includes(contacts[0].email));
+      }
+    }
+  }, readConfig({ HOST_CONTACTS_JSON: JSON.stringify(contacts) }));
+});
+
 test('invalid and malicious inputs cannot change RSVP records', async () => {
   await fixture(async ({ store, created, base }) => {
     const token = created[0].token;

@@ -1,6 +1,13 @@
 import { resolve } from 'node:path';
 import { isoDate } from './validation.ts';
 
+export interface HostContact {
+  name: string;
+  phone: string;
+  phoneDisplay: string;
+  email: string;
+}
+
 export interface Config {
   host: string;
   port: number;
@@ -10,6 +17,26 @@ export interface Config {
   rsvpClosesAt: string | null;
   ipLimit: number;
   tokenLimit: number;
+  hostContacts: HostContact[];
+}
+
+function hostContacts(raw: string | undefined): HostContact[] {
+  try {
+    const contacts: unknown = JSON.parse(raw ?? '[]');
+    if (!Array.isArray(contacts) || contacts.length > 10) throw new Error();
+    return contacts.map((contact: unknown) => {
+      if (contact === null || typeof contact !== 'object') throw new Error();
+      const { name, phone, phoneDisplay, email } = contact as Record<string, unknown>;
+      if (typeof name !== 'string' || !name.trim() || name.length > 100 ||
+          typeof phone !== 'string' || !/^\+[1-9]\d{7,14}$/.test(phone) ||
+          typeof phoneDisplay !== 'string' || !phoneDisplay.trim() || phoneDisplay.length > 50 ||
+          typeof email !== 'string' || email.length > 254 || !/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email)) throw new Error();
+      return { name, phone, phoneDisplay, email };
+    });
+  } catch {
+    // Configuration errors must not echo the private values into logs.
+    throw new Error('HOST_CONTACTS_JSON must be a JSON array of contacts with name, phone (international format), phoneDisplay and email.');
+  }
 }
 
 function positiveInteger(value: string | undefined, fallback: number, max: number): number {
@@ -41,5 +68,6 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): Config {
     rsvpClosesAt: env.RSVP_CLOSES_AT ? isoDate(env.RSVP_CLOSES_AT) : null,
     ipLimit: positiveInteger(env.RATE_LIMIT_PER_IP, 120, 10000),
     tokenLimit: positiveInteger(env.RATE_LIMIT_PER_INVITE, 30, 10000),
+    hostContacts: hostContacts(env.HOST_CONTACTS_JSON),
   };
 }

@@ -8,6 +8,7 @@ export interface SealParticle {
 }
 
 interface EnvelopeProps {
+  recipientName: string;
   envelopeControls: AnimationControls;
   flapControls: AnimationControls;
   lightControls: AnimationControls;
@@ -20,6 +21,7 @@ interface EnvelopeProps {
 }
 
 export default function Envelope({
+  recipientName,
   envelopeControls,
   flapControls,
   lightControls,
@@ -49,7 +51,7 @@ export default function Envelope({
 
       <div className="face front">
         <div className="front-address">
-          <div className="addr-name">Dear Guest</div>
+          <div className="addr-name">Dear {recipientName}</div>
         </div>
         <span className="envelope-corner envelope-corner-tl" aria-hidden="true">❧</span>
         <span className="envelope-corner envelope-corner-tr" aria-hidden="true">❧</span>
