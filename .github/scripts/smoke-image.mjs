@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const base = 'http://127.0.0.1:3001';
-const token = readFileSync('/data/links.csv', 'utf8').match(/[?&]invite=([A-Za-z0-9_-]{43})/)?.[1];
+const token = readFileSync('/data/links.csv', 'utf8').match(/[#?&]invite=([A-Za-z0-9_-]{43})/)?.[1];
 assert.ok(token, 'Private fixture import must generate an invitation link');
 const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 

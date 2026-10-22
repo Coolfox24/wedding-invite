@@ -1,0 +1,42 @@
+.rsvp-form-wrap, .rsvp-notice { position: relative; width: min(680px, 100%); margin: 2rem auto 0; }
+.rsvp-notice { padding: 1.5rem; border: 1px solid #a6b09f; color: #344538; line-height: 1.6; }
+.rsvp-notice p { margin: .4rem 0; }
+.rsvp-form a, .rsvp-notice a { color: #344538; text-underline-offset: .2em; }
+.rsvp-form { text-align: left; }
+.rsvp-for { margin: 1rem 0 .6rem; color: #344538; text-align: center; font-size: 1.2rem; overflow-wrap: anywhere; }
+.rsvp-for strong { display: block; font-family: "Cinzel", serif; font-size: 1.1rem; font-weight: 500; }
+.rsvp-saved-note { color: #59614f; text-align: center; font-size: .95rem; }
+.rsvp-fields { min-width: 0; margin: 1.8rem 0; padding: 0; border: 0; }
+.rsvp-fields:disabled { opacity: .7; }
+.rsvp-guest { min-width: 0; margin: 0 0 1.6rem; padding: 1.2rem; border: 1px solid #a6b09f; }
+.rsvp-guest legend { max-width: 100%; padding: 0 .5rem; color: #344538; font-family: "Cinzel", serif; font-size: .95rem; overflow-wrap: anywhere; }
+.rsvp-guest > p { margin: 0 0 .9rem; color: #344538; font-size: 1.1rem; }
+.rsvp-attendance { display: flex; flex-wrap: wrap; gap: .6rem 1.5rem; }
+.rsvp-attendance label { display: inline-flex; min-height: 44px; align-items: center; gap: .6rem; color: #344538; cursor: pointer; }
+.rsvp-attendance input { width: 20px; height: 20px; margin: 0; accent-color: #344538; flex-shrink: 0; }
+.rsvp-field { display: flex; flex-direction: column; gap: .5rem; margin-top: 1.1rem; color: #344538; font-size: 1.05rem; }
+.rsvp-field > span { color: #626659; font-size: .9rem; }
+.rsvp-field input, .rsvp-field textarea { box-sizing: border-box; width: 100%; border: 1px solid #89967f; border-radius: 2px; padding: .8rem; color: #243427; background: #fbfaf5; font: inherit; font-size: max(16px, 1rem); }
+.rsvp-field textarea { resize: vertical; min-height: 90px; }
+.rsvp-field input::placeholder, .rsvp-field textarea::placeholder { color: #6a705f; opacity: 1; }
+.rsvp-form :focus-visible, .rsvp-notice a:focus-visible, .rsvp-form-wrap > button:focus-visible { outline: 3px solid #9e7d3d; outline-offset: 4px; }
+.rsvp-button { display: block; min-height: 48px; width: fit-content; max-width: 100%; margin: 1.4rem auto 0; border: 1px solid #344538; border-radius: 2px; padding: .85rem 2rem; color: #f5f1e6; background: #344538; font-family: "Cinzel", serif; font-size: .85rem; letter-spacing: .08em; cursor: pointer; }
+.rsvp-button:hover:not(:disabled) { background: #253729; }
+.rsvp-button:disabled { opacity: .6; cursor: default; }
+.rsvp-button-secondary { color: #344538; background: transparent; }
+.rsvp-button-secondary:hover:not(:disabled) { color: #f5f1e6; }
+.rsvp-feedback { color: #344538; line-height: 1.5; }
+.rsvp-feedback:empty { margin: 0; }
+.rsvp-feedback:not(:empty) { margin: 1.2rem 0; border: 1px solid #7b9271; padding: .85rem 1rem; background: #e1e9d9; }
+.rsvp-feedback p { margin: 0; }
+.rsvp-feedback-error:not(:empty) { border-color: #a86b52; color: #733f2a; background: #f7eadf; }
+.rsvp-feedback small { display: inline-block; margin-top: .4rem; font-size: .9rem; }
+.rsvp-conflict { text-align: center; }
+.rsvp-conflict small { display: block; margin-top: .6rem; color: #626659; }
+.rsvp-privacy { margin: 1.1rem auto 0; max-width: 500px; color: #59614f; text-align: center; font-size: .92rem; line-height: 1.5; }
+.rsvp-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 600px) {
+  .rsvp-guest { padding: 1rem .8rem; }
+  .rsvp-attendance { flex-direction: column; gap: .2rem; }
+  .rsvp-button { width: 100%; padding-inline: .8rem; }
+}

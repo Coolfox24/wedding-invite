@@ -12,6 +12,8 @@
     "api:build": "tsc -p tsconfig.server.json",
     "api:start": "node dist-server/index.js",
     "api:test": "node --experimental-strip-types --test server/api.test.ts",
+    "rsvp:check": "tsc -p tsconfig.rsvp-test.json",
+    "rsvp:test": "node --experimental-strip-types --test tests/rsvp.test.ts",
     "api:admin": "node --experimental-strip-types server/cli.ts"
   },
   "dependencies": {

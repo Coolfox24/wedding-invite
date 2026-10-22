@@ -2,7 +2,8 @@
 
 A private-link RSVP API for the existing React invitation. No guest accounts and no
 public guest-registration or administration endpoints. The frontend RSVP section
-is not connected yet; this change provides its backend and deployment setup.
+loads each invitation's named guests and saves replies to this API. For the live
+host and one test invitation, follow [RSVP setup](../deploy/RSVP-SETUP.md).
 
 Uses TypeScript, Node's HTTP server, and `node:sqlite`. No extra runtime packages.
 Deploy with Node 24; Node 22.16+ also works for local development with the scripts
@@ -31,6 +32,8 @@ Node `--env-file` argument when starting the compiled entry point.
 ```sh
 npm run api:build
 npm run api:test
+npm run rsvp:check
+npm run rsvp:test
 npm run api:start
 ```
 
@@ -49,10 +52,11 @@ and an actual HTTP server on an ephemeral loopback port.
 
 API requests must send `Authorization: Bearer <token>`. Query parameters are
 rejected. Never send API tokens in URLs, cookies, request bodies, or guest IDs.
-The private frontend link uses `?invite=<token>`; the browser should read that
-value and then use the authorization header for API calls. Keep it out of
-analytics/referrer headers and remove it from the displayed URL after reading it
-when the frontend is connected. A token authorizes a household, not proof of a
+New private frontend links use `#invite=<token>` so the secret is not sent in the
+initial HTTP request. The frontend removes it from the displayed URL and keeps it
+in memory plus tab-scoped session storage for reloads. Legacy `?invite=<token>`
+links are also accepted and scrubbed. API requests use only the authorization
+header; never put tokens in analytics. A token authorizes a household, not proof of a
 person's identity: forwarded links work until revoked or replaced.
 
 GET `/api/invitation` returns:
@@ -144,6 +148,7 @@ Quoted commas, quotes, newlines, Unicode, and a UTF-8 BOM are supported.
 
 ```sh
 npm run api:admin -- import private/guests.csv --links private/new-links.csv
+npm run api:admin -- create-test --links private/test-guest-link.csv
 npm run api:admin -- rotate alex --links private/replacement-link.csv
 npm run api:admin -- revoke alex
 npm run api:admin -- export private/responses.csv
@@ -156,6 +161,11 @@ are rejected; editing household membership is intentionally not part of this
 initial version. The entire import rolls back if a row conflicts or saving the
 new link file fails. Import output contains links only for newly created
 invitations. Output files must not already exist.
+
+`create-test` is an explicit private owner action: it creates one named **Test
+Guest** with the key `test-guest`, no plus-one, and a new random token. Nothing is
+seeded automatically. If it exists, use `rotate test-guest` to replace its link
+without resetting replies. Revoke it when finished.
 
 Token secrets are generated from 32 cryptographically random bytes and only SHA-256
 hashes are stored in SQLite. **The generated link CSV is the one-time secret
@@ -207,11 +217,12 @@ The supplied image serves both the built React frontend at `/` and the API at
 at `/data/rsvp.sqlite`. Mount `/data` as a persistent volume so replacing the
 container preserves invitations and replies. There is no separate database server
 and no guest data or secrets are baked into the image. The private CLI is included.
-The frontend RSVP form still needs connecting to the API.
+The frontend form uses these same-origin endpoints, loads saved replies on return,
+and confirms a save only after the server commits it.
 
 `.github/workflows/api.yml` builds `linux/arm64` on a native `ubuntu-24.04-arm`
 GitHub runner. During the build it compiles the frontend with `--base=/`, compiles
-the API, and runs the API integration tests. A subsequent image smoke test checks
+the API, and runs the API and frontend-client integration tests. A subsequent image smoke test checks
 frontend assets, API authorization, and an RSVP surviving replacement of the
 container with the same database volume. GitHub Pages keeps its existing separate
 workflow and `/wedding-invite/` base.
