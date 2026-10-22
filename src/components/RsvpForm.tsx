@@ -23,11 +23,11 @@ function savedDate(value: string) {
   return new Intl.DateTimeFormat('en-AU', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
 }
 
-export default function RsvpForm({ session }: { session: InvitationSession }) {
-  const [invitation, setInvitation] = useState<Invitation | null>(null);
-  const [answers, setAnswers] = useState<Answer[]>([]);
-  const [notes, setNotes] = useState('');
-  const [loading, setLoading] = useState(session.status === 'ready');
+export default function RsvpForm({ session, initialInvitation }: { session: InvitationSession; initialInvitation: Invitation }) {
+  const [invitation, setInvitation] = useState<Invitation | null>(initialInvitation);
+  const [answers, setAnswers] = useState<Answer[]>(() => answersFor(initialInvitation));
+  const [notes, setNotes] = useState(initialInvitation.rsvp?.notes ?? '');
+  const [loading, setLoading] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -39,7 +39,7 @@ export default function RsvpForm({ session }: { session: InvitationSession }) {
   const status = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (session.status !== 'ready') return;
+    if (session.status !== 'ready' || loadAttempt === 0) return;
     const controller = new AbortController();
     loadInvitation(session.token, { signal: controller.signal }).then((value) => {
       if (controller.signal.aborted) return;

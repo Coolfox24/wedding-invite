@@ -33,6 +33,32 @@ hostname as the frontend. `TRUST_CLOUDFLARE_PROXY` should stay false unless call
 cannot bypass the tunnel and forge client IP headers. With it disabled, guests
 behind the proxy share the IP limit; the invitation limit still applies separately.
 
+## Private host contact details
+
+Phone numbers and email addresses are not included in the frontend bundle. Set
+`HOST_CONTACTS_JSON` on the server to show them in the FAQ after an invitation has
+been authenticated. Without it, guests see a message to use the details they
+already have. Missing, invalid, expired and revoked links never receive contacts.
+
+On your Docker host, create `./secrets/host-contacts.env` privately, using this
+format with your actual details (one line):
+
+```dotenv
+HOST_CONTACTS_JSON='[{"name":"Host","phone":"+61400000000","phoneDisplay":"0400 000 000","email":"host@example.com"}]'
+```
+
+Add this under your existing `services.wedding` configuration, alongside
+`environment`:
+
+```yaml
+    env_file:
+      - ./secrets/host-contacts.env
+```
+
+Keep the file out of Git and restrict its host permissions (`chmod 600
+./secrets/host-contacts.env`). Recreate the wedding service after changing it.
+API responses containing these details use `Cache-Control: no-store`.
+
 ## Create one Test Guest
 
 Run these on the Docker host. Use the actual container name from `docker ps`:
@@ -69,7 +95,10 @@ Use a fresh output filename for each rotation. The old link is invalid immediate
 ## Verify saving
 
 1. Open the generated link, open the envelope, and go to RSVP. It should say
-   **Invitation for Test Guest**. The token disappears from the address bar.
+   **Dear Test Guest** on the envelope and **Invitation for Test Guest** in RSVP.
+   The token disappears from the address bar. Validation happens before displaying
+   the envelope; invalid, expired, revoked, or missing links show Matt and Sarah's
+   an error message instead, without any contact details.
 2. Choose acceptance or decline, optionally enter dietary requirements and notes,
    and select **Save RSVP**. Wait for **Your RSVP is saved. Thank you!**
 3. Reload and reopen the envelope, or reopen the original generated link. The

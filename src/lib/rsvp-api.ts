@@ -17,6 +17,13 @@ export interface RsvpPayload {
   notes: string;
 }
 
+export interface HostContact {
+  name: string;
+  phone: string;
+  phoneDisplay: string;
+  email: string;
+}
+
 export interface Invitation {
   label: string;
   expiresAt: string | null;
@@ -25,6 +32,7 @@ export interface Invitation {
   revision: number;
   rsvpClosesAt: string | null;
   canRespond: boolean;
+  contacts: HostContact[];
 }
 
 export class RsvpError extends Error {
@@ -55,6 +63,12 @@ function parseInvitation(value: unknown): Invitation {
       !Number.isSafeInteger(value.revision) || (value.revision as number) < 0 ||
       !Array.isArray(value.guests) || value.guests.length < 1 || value.guests.length > 20) return fail();
   const ids = new Set<string>();
+  if (!Array.isArray(value.contacts) || value.contacts.length > 10) return fail();
+  for (const contact of value.contacts) {
+    if (!record(contact) || typeof contact.name !== 'string' || typeof contact.phoneDisplay !== 'string' ||
+        typeof contact.phone !== 'string' || !/^\+[1-9]\d{7,14}$/.test(contact.phone) ||
+        typeof contact.email !== 'string' || !/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(contact.email)) return fail();
+  }
   for (const guest of value.guests) {
     if (!record(guest) || typeof guest.id !== 'string' || typeof guest.name !== 'string' || typeof guest.isPlusOne !== 'boolean' || ids.has(guest.id)) return fail();
     ids.add(guest.id);

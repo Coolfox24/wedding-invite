@@ -4,12 +4,13 @@ import Envelope, { type SealParticle } from "./Envelope";
 import InvitationLetter from "./InvitationLetter";
 
 interface InvitationCardProps {
+  recipientName: string;
   opened: boolean;
   onOpening: () => void;
   onOpen: () => void;
 }
 
-export default function InvitationCard({ opened, onOpening, onOpen }: InvitationCardProps) {
+export default function InvitationCard({ recipientName, opened, onOpening, onOpen }: InvitationCardProps) {
   const [animating, setAnimating] = useState(false);
   const flapControls = useAnimation();
   const envelopeControls = useAnimation();
@@ -154,6 +155,7 @@ export default function InvitationCard({ opened, onOpening, onOpen }: Invitation
         whileTap={{ scale: 0.98 }}
       >
         <Envelope
+          recipientName={recipientName}
           envelopeControls={envelopeControls}
           flapControls={flapControls}
           lightControls={lightControls}
