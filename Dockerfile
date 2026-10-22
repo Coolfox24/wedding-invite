@@ -3,12 +3,13 @@ WORKDIR /build
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY tsconfig.server.json ./
-COPY tsconfig.json tsconfig.app.json tsconfig.node.json vite.config.ts index.html ./
+COPY tsconfig.json tsconfig.app.json tsconfig.node.json tsconfig.rsvp-test.json vite.config.ts index.html ./
 COPY src ./src
 COPY public ./public
 COPY server ./server
+COPY tests ./tests
 # Container hosting uses /; the separate GitHub Pages build keeps its existing base.
-RUN npm run build -- --base=/ && npm run api:build && npm run api:test
+RUN npm run build -- --base=/ && npm run api:build && npm run rsvp:check && npm run api:test && npm run rsvp:test
 
 FROM node:24-bookworm-slim AS runtime
 ENV NODE_ENV=production HOST=0.0.0.0 PORT=3001 DATABASE_PATH=/data/rsvp.sqlite STATIC_DIRECTORY=/app/public-dist

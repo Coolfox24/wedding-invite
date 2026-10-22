@@ -6,6 +6,7 @@ import { csv, invitesFromCsv } from './csv.ts';
 
 const usage = `Private wedding administration (never exposed over HTTP):
   import <guests.csv> --links <new-links.csv>
+  create-test --links <new-links.csv>
   rotate <invitation-key> --links <new-links.csv>
   revoke <invitation-key>
   export <new-responses.csv>
@@ -37,7 +38,8 @@ function linksWriter(fd: number, base: URL) {
       ['invitation_key', 'invitation_label', 'url'],
       ...created.map((invite) => {
         const url = new URL(base);
-        url.searchParams.set('invite', invite.token);
+        // Fragments are read by the frontend and are never sent in HTTP requests.
+        url.hash = new URLSearchParams({ invite: invite.token }).toString();
         return [invite.key, invite.label, url.href];
       }),
     ]));
@@ -48,9 +50,13 @@ function linksWriter(fd: number, base: URL) {
 
 export function runAdmin(args: string[]) {
   if (args.length === 0 || args[0] === '--help') { console.log(usage); return; }
-  const [command, input, flag, output] = args;
-  const createsLinks = command === 'import' || command === 'rotate';
-  if (!input || (createsLinks ? args.length !== 4 || flag !== '--links' || !output : args.length !== 2) || !['import', 'rotate', 'revoke', 'export', 'backup'].includes(command)) {
+  const [command, input, flag] = args;
+  const isTest = command === 'create-test';
+  const output = isTest ? args[2] : args[3];
+  const createsLinks = command === 'import' || command === 'rotate' || isTest;
+  const validArgs = isTest ? args.length === 3 && input === '--links' && !!output
+    : createsLinks ? args.length === 4 && flag === '--links' && !!output : args.length === 2;
+  if (!input || !validArgs || !['import', 'create-test', 'rotate', 'revoke', 'export', 'backup'].includes(command)) {
     throw new Error(usage);
   }
   process.umask(0o077);
@@ -60,7 +66,13 @@ export function runAdmin(args: string[]) {
       const base = publicBaseUrl();
       const path = resolve(output);
       newFile(path, (fd) => {
-        if (command === 'import') {
+        if (isTest) {
+          store.importInvites([{ key: 'test-guest', label: 'Test Guest', expiresAt: null, guests: [{ name: 'Test Guest', isPlusOne: false }] }], (created) => {
+            if (created.length !== 1) throw new Error('Test Guest already exists. Use rotate test-guest --links <new-file> to replace its link.');
+            linksWriter(fd, base)(created);
+          });
+          console.log('Created one Test Guest invitation. Keep its generated link private; revoke test-guest when finished.');
+        } else if (command === 'import') {
           const source = readFileSync(resolve(input));
           if (source.length > 1024 * 1024) throw new Error('Guest CSV exceeds 1 MiB.');
           const result = store.importInvites(invitesFromCsv(source.toString('utf8')), linksWriter(fd, base));

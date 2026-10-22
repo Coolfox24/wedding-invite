@@ -4,6 +4,8 @@ import InvitationCard from "./components/InvitationCard";
 import FloatingParticles from "./components/FloatingParticles";
 import MusicToggle from "./components/MusicToggle";
 import WeddingTimeline from "./components/WeddingTimeline";
+import RsvpForm from './components/RsvpForm';
+import type { InvitationSession } from './lib/invitation-session';
 
 const weddingDate = new Date(2027, 1, 2, 0, 0, 0);
 
@@ -35,7 +37,7 @@ function BotanicalMark({ className = "" }: { className?: string }) {
   );
 }
 
-function App() {
+function App({ invitationSession }: { invitationSession: InvitationSession }) {
   const [opened, setOpened] = useState(false);
   const [opening, setOpening] = useState(false);
   const countdown = useCountdown();
@@ -297,12 +299,7 @@ function App() {
                 <p className="eyebrow">We hope you can join us</p>
                 <h2>Will You Join Us?</h2>
                 <p>We would be honoured to celebrate this special day with you.</p>
-                <div className="rsvp-questions" data-scroll-stagger>
-                  <div><span>01</span><p>Will you be joining us?</p><small>Joyfully accepts &nbsp; / &nbsp; Regretfully declines</small></div>
-                  <div><span>02</span><p>Who will be attending?</p><small>[Guest name]</small></div>
-                  <div><span>03</span><p>Any dietary requirements or allergies?</p><small>None &nbsp; / &nbsp; Vegetarian &nbsp; / &nbsp; Other: _______</small></div>
-                  <div><span>04</span><p>Any special requests or notes for us?</p><small>[Your message]</small></div>
-                </div>
+                <RsvpForm session={invitationSession} />
                 <p className="rsvp-deadline">Kindly reply by <strong>Friday, 11 December 2026</strong></p>
               </div>
               <div className="plus-one-note"><span>With love,</span><p>Kindly note that invitations are intended for the guests named on the invitation. Please refer to the name(s) listed above for your invitation details.</p></div>
@@ -352,7 +349,7 @@ function App() {
                 </details>
                 <details><summary>When should I RSVP?</summary><p>Please RSVP by Friday, 11 December 2026.</p></details>
                 <details>
-                  <summary>Who can I contact with questions?</summary>
+                  <summary id="faq-contact">Who can I contact with questions?</summary>
                   <div className="faq-contacts">
                     <p><strong>Matt</strong><br /><a href="tel:+61492995379">04 9299 5379</a><br /><a href="mailto:mattjgoulden@gmail.com">mattjgoulden@gmail.com</a></p>
                     <p><strong>Sarah</strong><br /><a href="tel:+61411180585">0411 180 585</a><br /><a href="mailto:sebaitan.05@gmail.com">sebaitan.05@gmail.com</a></p>

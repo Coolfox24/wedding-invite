@@ -301,7 +301,8 @@ test('private CLI creates secret links without printing them and refuses output 
     const imported = run('import', input, '--links', links);
     assert.equal(imported.status, 0, imported.stderr);
     const url = new URL(parseCsv(readFileSync(links, 'utf8'))[1][2]);
-    const token = url.searchParams.get('invite')!;
+    assert.equal(url.search, '');
+    const token = new URLSearchParams(url.hash.slice(1)).get('invite')!;
     assert.ok(token.length === 43 && !imported.stdout.includes(token) && !imported.stderr.includes(token));
     assert.equal(run('import', input, '--links', links).status, 1);
     assert.equal(run('rotate', 'a', '--links', join(dir, 'rotated.csv')).status, 0);
@@ -311,6 +312,17 @@ test('private CLI creates secret links without printing them and refuses output 
     assert.equal(run('export', join(dir, 'responses.csv')).status, 0);
     assert.equal(run('backup', join(dir, 'backup.sqlite')).status, 0);
     assert.equal(run('revoke', 'a').status, 0);
+    const testLinks = join(dir, 'test-links.csv');
+    assert.equal(run('create-test', '--links', testLinks).status, 0);
+    assert.equal(run('create-test', '--links', join(dir, 'duplicate-test-links.csv')).status, 1);
+    const testUrl = new URL(parseCsv(readFileSync(testLinks, 'utf8'))[1][2]);
+    assert.equal(testUrl.origin, 'https://wedding.example.com');
+    assert.equal(testUrl.search, '');
+    const testToken = new URLSearchParams(testUrl.hash.slice(1)).get('invite')!;
+    const testStore = new Store(env.DATABASE_PATH);
+    assert.equal(testStore.view(testStore.authenticate(testToken)).guests[0].name, 'Test Guest');
+    assert.equal(testStore.view(testStore.authenticate(testToken)).guests.length, 1);
+    testStore.close();
     const failedEnv = { ...env, PUBLIC_BASE_URL: 'http://insecure.example.com/' };
     assert.equal(spawnSync(process.execPath, ['--experimental-strip-types', cli, 'rotate', 'a', '--links', join(dir, 'bad.csv')], { env: failedEnv }).status, 1);
   } finally { cleanup(dir); }
